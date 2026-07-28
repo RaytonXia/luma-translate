@@ -1,0 +1,22 @@
+========================================================================
+  Luma Translate - 使用方法（只有一步）
+========================================================================
+
+解压本压缩包后，打开 source 文件夹，双击 build.cmd。
+
+等待约 10-30 秒：编译完成后 Luma Translate 会自动启动。
+（如果没有自动启动，回到上一层文件夹，双击新生成的
+ SGFloatingTranslator.exe 即可。）
+
+说明：
+- 本包不含预编译 exe，必须先执行上面这一步生成。
+- build.cmd 使用 Windows 自带的 .NET 编译器，无需安装任何软件。
+- 需要 Windows 10/11 x64，并已安装英语 OCR 语言包。
+- 若编译报错：在 source 文件夹的地址栏输入 cmd 并回车，在打开的
+  命令行窗口中输入  build.cmd  回车，把窗口里的报错截图提交到
+  GitHub Issues。
+- TestGeminiKey.cmd 是可选的 Gemini 密钥测试工具；如果双击它被系统
+  拦截，可忽略。
+
+项目主页与最新版本：
+  https://github.com/YOUR-USERNAME/luma-translate
