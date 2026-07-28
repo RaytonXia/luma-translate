@@ -6,7 +6,7 @@
 
 等待约 10-30 秒：编译完成后 Luma Translate 会自动启动。
 （如果没有自动启动，回到上一层文件夹，双击新生成的
- SGFloatingTranslator.exe 即可。）
+luma-translate.exe 即可。）
 
 说明：
 - 本包不含预编译 exe，必须先执行上面这一步生成。
