@@ -2,7 +2,7 @@
 
 本项目的版本号遵循 `主版本.次版本.修订号` 格式。
 
-## v4.1.1 — 紧急修复
+## v4.1.1
 
 AI 设置窗口的根布局声明了 `GrowStyle = FixedSize` 却未设置 `ColumnCount`，可用单元格数为 8 行 × 0 列 = 0，添加第一个控件即抛出「TableLayoutPanel 已满并且 GrowStyle 为 FixedSize」的未处理异常。该窗口因此完全无法打开，导致 DeepSeek 与 Gemini 的密钥和隐私授权都无法配置，AI 功能整体不可用。现已补上 `ColumnCount = 1`，并复查了全部布局面板的容量。
 
