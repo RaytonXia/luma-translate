@@ -11,8 +11,8 @@
 [![Platform](https://img.shields.io/badge/platform-Windows%2010%2F11%20x64-0078D4)](#系统要求)
 [![.NET](https://img.shields.io/badge/.NET%20Framework-4.x-512BD4)](#从源码构建)
 [![License](https://img.shields.io/badge/license-MIT-green)](LICENSE)
-[![Release](https://img.shields.io/github/v/release/YOUR-USERNAME/luma-translate)](../../releases/latest)
-[![Downloads](https://img.shields.io/github/downloads/YOUR-USERNAME/luma-translate/total)](../../releases)
+[![Release](https://img.shields.io/github/v/release/RaytonXia/luma-translate)](../../releases/latest)
+[![Downloads](https://img.shields.io/github/downloads/RaytonXia/luma-translate/total)](../../releases)
 
 [下载使用](#下载使用) · [功能演示](#功能演示) · [隐私边界](#隐私边界) · [使用手册](docs/使用手册.md)
 
@@ -27,7 +27,8 @@
      把下面这行替换掉即可。图片上限 10 MB。
      ──────────────────────────────────────────────────────────── -->
 
-![Luma Translate 海报](assets/poster.png)
+<img width="1080" height="1440" alt="download" src="https://github.com/user-attachments/assets/6885d683-1f2e-4970-a71e-036dba364ee6" />
+
 
 ## 这是什么
 
@@ -43,15 +44,7 @@ Luma Translate 是一款给**中文母语者**用的 Windows 屏幕阅读辅助�
 
 ## 功能演示
 
-<!-- ────────────────────────────────────────────────────────────
-     宣传片位：GitHub 支持在 README 里直接播放视频
-     在网页上编辑 README 时，把 .mp4 / .mov / .webm 拖进编辑框，
-     GitHub 会上传并生成一段可播放的链接，粘在下面这行位置。
-     免费账号单个视频上限 10 MB；超了就压一下，或者改放 GIF，
-     或者贴 B 站 / YouTube 封面图 + 链接。
-     ──────────────────────────────────────────────────────────── -->
-
-> 把宣传片拖到这里
+https://github.com/user-attachments/assets/bb3c87a9-725c-4ef7-b9b5-e9db346e9dff
 
 | 手势 | 效果 |
 | :--- | :--- |
@@ -71,9 +64,6 @@ Luma Translate 是一款给**中文母语者**用的 Windows 屏幕阅读辅助�
 
 支持 DeepSeek 和 Google Gemini，**密钥由你自己提供**，程序不内置、不代理、不转发。没配置密钥时，长按拖拽不会触发任何联网行为。
 
-### 新加坡本地化
-
-离线词库里额外维护了一层本地表达：`MRT`、`HDB`、`CPF`、`hawker centre`、`kopitiam`、`void deck`、`lah`、`lor`、`shiok`、`chope` 等。
 
 ## 下载使用
 
