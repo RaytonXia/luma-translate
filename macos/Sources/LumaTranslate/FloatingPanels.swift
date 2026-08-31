@@ -83,7 +83,11 @@ private struct CursorOrbView: View {
                 .fill(.ultraThinMaterial)
                 .overlay(Circle().strokeBorder(Color.white.opacity(0.7), lineWidth: 1))
             Circle()
-                .fill(state == .processing ? LumaPalette.violet : LumaPalette.orbitGradient)
+                .fill(
+                    state == .processing
+                        ? AnyShapeStyle(LumaPalette.violet)
+                        : AnyShapeStyle(LumaPalette.orbitGradient)
+                )
                 .frame(width: state == .awaitingSecondClick ? 13 : 10, height: state == .awaitingSecondClick ? 13 : 10)
                 .shadow(color: LumaPalette.cyan.opacity(0.55), radius: 5)
             if state == .selecting {
@@ -124,7 +128,8 @@ final class CursorBadgeController {
         panel.orderFrontRegardless()
         followPointer()
         timer = Timer.scheduledTimer(withTimeInterval: 1.0 / 30.0, repeats: true) { [weak self] _ in
-            Task { @MainActor in self?.followPointer() }
+            guard let self else { return }
+            Task { @MainActor [self] in self.followPointer() }
         }
     }
 

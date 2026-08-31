@@ -103,9 +103,10 @@ final class AppModel: ObservableObject {
             object: nil,
             queue: .main
         ) { [weak self] _ in
-            Task { @MainActor in
-                self?.refreshPermissions()
-                self?.startGestureIfPossible()
+            guard let self else { return }
+            Task { @MainActor [self] in
+                self.refreshPermissions()
+                self.startGestureIfPossible()
             }
         }
         startGestureIfPossible()
