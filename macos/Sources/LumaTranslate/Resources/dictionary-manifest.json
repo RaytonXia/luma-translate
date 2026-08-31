@@ -1,0 +1,15 @@
+{
+  "format": "SGFT-ECDICT-1",
+  "library_version": "ECDICT-core-2026-07-22+SG-overlay-1",
+  "source_project": "https://github.com/skywind3000/ECDICT",
+  "source_file": "ecdict.csv",
+  "source_download_date": "2026-07-22",
+  "core_record_count": 47149,
+  "selection_rule": "Entries with Chinese translation and English definition that are Oxford/core tagged, Collins ranked, tagged for a learning list, or in the top 50000 BNC/contemporary frequency ranks.",
+  "runtime_file": "offline_ecdict_core.tsv",
+  "runtime_sha256": "9B4BFF28B58DC1C0A0218912AA16B7DE70E1F22EBBCEDA0D0F93073FB812100A",
+  "source_compressed_file": "offline_ecdict_core.tsv.gz",
+  "source_compressed_sha256": "EE70FC372920B51E1355D2BC210AB45BB8FD5813116AF5D2AA4C6A07918DE73D",
+  "swift_resource_name": "offline_ecdict_core.tsv",
+  "license": "MIT; see ../../licenses/ECDICT_LICENSE.txt and ../../THIRD_PARTY_NOTICES.md"
+}

@@ -1,0 +1,54 @@
+name: Build macOS Universal
+
+on:
+  workflow_dispatch:
+    inputs:
+      version:
+        description: Version written into the app bundle
+        required: false
+        default: 1.0.0
+  push:
+    branches:
+      - codex/macos-universal-build
+    tags:
+      - "v*"
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    runs-on: macos-14
+    timeout-minutes: 30
+    steps:
+      - name: Check out source
+        uses: actions/checkout@v4
+
+      - name: Run unit tests
+        run: swift test --package-path macos
+
+      - name: Build universal app, ZIP, and DMG
+        env:
+          LUMA_VERSION: ${{ github.event.inputs.version || (startsWith(github.ref, 'refs/tags/v') && github.ref_name) || '1.0.0' }}
+          LUMA_BUILD_NUMBER: ${{ github.run_number }}
+        run: |
+          chmod +x macos/scripts/build-universal.sh
+          version="${LUMA_VERSION#v}"
+          LUMA_VERSION="$version" macos/scripts/build-universal.sh
+
+      - name: Upload universal artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: Luma-Translate-macOS-Universal
+          path: macos/.build/dist/*
+          if-no-files-found: error
+
+      - name: Attach files to tagged GitHub Release
+        if: startsWith(github.ref, 'refs/tags/v')
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          if ! gh release view "$GITHUB_REF_NAME" >/dev/null 2>&1; then
+            gh release create "$GITHUB_REF_NAME" --title "Luma Translate $GITHUB_REF_NAME" --generate-notes
+          fi
+          gh release upload "$GITHUB_REF_NAME" macos/.build/dist/* --clobber
