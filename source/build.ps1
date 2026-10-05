@@ -13,7 +13,8 @@ foreach ($required in @($compiler, $speechAssembly, $dictionary, (Join-Path $met
 $arguments = @('/nologo', '/codepage:65001', '/warn:4', '/optimize+', '/platform:x64',
     "/win32manifest:$sourceDirectory\app.manifest", "/win32icon:$outputDirectory\assets\luma-logo.ico",
     "/resource:$dictionary,SGFloatingTranslator.OfflineEcdict",
-    "/resource:$outputDirectory\assets\luma-logo.ico,SGFloatingTranslator.LumaLogo")
+    "/resource:$outputDirectory\assets\luma-logo.ico,SGFloatingTranslator.LumaLogo",
+    "/resource:$outputDirectory\assets\luma-logo-ui.png,SGFloatingTranslator.LumaLogoPng")
 foreach ($assembly in @('System.dll', 'System.Core.dll', 'System.Drawing.dll', 'System.Windows.Forms.dll',
         'System.Net.Http.dll', 'System.Web.Extensions.dll', 'System.Security.dll', $speechAssembly,
         "$frameworkDirectory\System.Runtime.dll")) { $arguments += "/reference:$assembly" }

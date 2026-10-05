@@ -1,5 +1,3 @@
-> **本地 UI 改版 1.1.0**：Windows 已编译并完成本机检查；新版 macOS UI 已修改源码，尚未在 Mac 上编译和验收。详见交付根目录的 `改版与验证说明.txt`。以下历史功能与构建文档供参考。
-
 <div align="center">
 
 <img src="Sources/LumaTranslate/Resources/luma-logo-icon.png" alt="Luma Translate" width="128">
@@ -8,7 +6,7 @@
 
 **右键双击，即刻看懂屏幕上的英文。**
 
-原生 macOS · Apple Silicon + Intel 通用 · Vision 本地 OCR · 47,149 条离线词典
+原生 macOS · Apple Silicon + Intel 通用 · Vision 本地 OCR · 767,778 条离线词典
 
 </div>
 

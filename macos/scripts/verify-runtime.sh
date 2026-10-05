@@ -17,6 +17,7 @@ codesign --verify --deep --strict --verbose=2 "$APP"
 lipo -archs "$APP/Contents/MacOS/LumaTranslate" | tee "$VERIFY_DIR/architectures.txt"
 sw_vers > "$VERIFY_DIR/system.txt"
 uname -m >> "$VERIFY_DIR/system.txt"
+sysctl -n machdep.cpu.brand_string >> "$VERIFY_DIR/system.txt" || true
 "$APP/Contents/MacOS/LumaTranslate" --verify-runtime "$VERIFY_DIR" > "$VERIFY_DIR/runtime.log" 2>&1 &
 APP_PID=$!
 for i in {1..90}; do

@@ -1910,11 +1910,16 @@ namespace SGFloatingTranslator
         {
             if (brandLogoBox == null || icon == null) return;
             Image oldImage = brandLogoBox.Image;
-            // Slightly smaller than the tile's inner box so the artwork keeps a clear
-            // margin and the tile's rounded region never shaves its edges.
-            int logoPixels = Math.Max(26, (int)Math.Round(28F * Math.Max(96, DeviceDpi) / 96F));
-            using (Icon displayIcon = new Icon(icon, new Size(logoPixels, logoPixels)))
-                brandLogoBox.Image = displayIcon.ToBitmap();
+            // The main window uses the 512 px artwork directly. Resizing an icon
+            // already selected at tray size discards the high-resolution frames.
+            using (Stream stream = Assembly.GetExecutingAssembly().GetManifestResourceStream("SGFloatingTranslator.LumaLogoPng"))
+            {
+                if (stream != null)
+                {
+                    using (Image source = Image.FromStream(stream)) brandLogoBox.Image = new Bitmap(source);
+                }
+                else brandLogoBox.Image = icon.ToBitmap();
+            }
             if (oldImage != null) oldImage.Dispose();
 
             if (formAppIcon != null) formAppIcon.Dispose();
