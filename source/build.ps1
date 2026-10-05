@@ -20,7 +20,7 @@ foreach ($assembly in @('System.dll', 'System.Core.dll', 'System.Drawing.dll', '
 foreach ($metadata in @('Windows.Foundation', 'Windows.Globalization', 'Windows.Graphics', 'Windows.Media', 'Windows.Storage')) {
     $arguments += "/reference:$metadataDirectory\$metadata.winmd"
 }
-$sources = @('Program.cs', 'MouseOcr.cs', 'ModernUi.cs', 'AiSettingsDialog.cs', 'DeepSeek.cs', 'LocalSpeech.cs') |
+$sources = @('Program.cs', 'MouseOcr.cs', 'ModernUi.cs', 'AiSettingsDialog.cs', 'DeepSeek.cs', 'LocalSpeech.cs', 'DictionaryQuality.cs') |
     ForEach-Object { Join-Path $sourceDirectory $_ }
 & $compiler @arguments /target:winexe "/out:$outputDirectory\LumaTranslate.exe" @sources
 if ($LASTEXITCODE -ne 0) { throw 'Application build failed.' }

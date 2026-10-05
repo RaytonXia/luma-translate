@@ -2192,15 +2192,15 @@ namespace SGFloatingTranslator
             explanationLabel.AccessibleName = "英文解释";
 
             usageCaption = CreateLabel("UsageCaption", 7.5F, FontStyle.Bold, UiPalette.TealDark);
-            usageCaption.Text = "日常用法";
-            usageCaption.AccessibleName = "实际生活用法标题";
+            usageCaption.Text = "用法与例句";
+            usageCaption.AccessibleName = "释义与学术用法标题";
 
             usageLabel = CreateLabel("UsageText", 9.0F, FontStyle.Regular, UiPalette.Ink);
-            usageLabel.AccessibleName = "实际生活用法";
+            usageLabel.AccessibleName = "释义与学术用法";
 
             speakButton = CreateButton("听", "朗读英文单词", ButtonTone.Glass);
             explainButton = CreateButton("听解释", "朗读英文解释", ButtonTone.Glass);
-            aiButton = CreateButton("AI 用法", "使用已配置的 AI 生成实际生活用法", ButtonTone.Accent);
+            aiButton = CreateButton("AI 详解", "使用已配置的 AI 生成释义与学术用法", ButtonTone.Accent);
             moreButton = CreateButton("详细", "在完整窗口中查看详细内容", ButtonTone.Glass);
             pauseButton = CreateButton("暂停", "暂停鼠标点译", ButtonTone.Glass);
             closeButton = CreateButton("关闭", "关闭这张词典卡片", ButtonTone.Glass);
@@ -2328,7 +2328,7 @@ namespace SGFloatingTranslator
             speakButton.Enabled = !String.IsNullOrWhiteSpace(currentText);
             explainButton.Enabled = result != null && !String.IsNullOrWhiteSpace(result.SimpleEnglish);
             aiButton.Enabled = result != null;
-            aiButton.Text = hasAiUsage ? "✦ AI 已补充" : "AI 用法";
+            aiButton.Text = hasAiUsage ? "✦ AI 已补充" : "AI 详解";
             moreButton.Enabled = result != null;
             UpdateToolTips();
             ShowNear(screenPoint);
@@ -2363,7 +2363,7 @@ namespace SGFloatingTranslator
             speakButton.Enabled = false;
             explainButton.Enabled = false;
             aiButton.Enabled = false;
-            aiButton.Text = "AI 用法";
+            aiButton.Text = "AI 详解";
             moreButton.Enabled = false;
             UpdateToolTips();
             ShowNear(screenPoint);
@@ -2459,7 +2459,7 @@ namespace SGFloatingTranslator
             speakButton.Enabled = !String.IsNullOrWhiteSpace(currentText);
             explainButton.Enabled = !String.IsNullOrWhiteSpace(currentResult.SimpleEnglish);
             aiButton.Enabled = true;
-            aiButton.Text = hasAiUsage ? "✦ AI 已补充" : "AI 用法";
+            aiButton.Text = hasAiUsage ? "✦ AI 已补充" : "AI 详解";
             moreButton.Enabled = true;
             UpdateToolTips();
             ApplyContentLayout();
@@ -2478,7 +2478,7 @@ namespace SGFloatingTranslator
             }
             aiBusy = busy;
             aiButton.Enabled = !busy && currentResult != null;
-            aiButton.Text = busy ? "AI 生成中…" : (hasAiUsage ? "✦ AI 已补充" : "AI 用法");
+            aiButton.Text = busy ? "AI 生成中…" : (hasAiUsage ? "✦ AI 已补充" : "AI 详解");
             if (!String.IsNullOrWhiteSpace(statusText)) fullTextTip.SetToolTip(aiButton, statusText.Trim());
             Invalidate();
         }
@@ -2500,7 +2500,7 @@ namespace SGFloatingTranslator
                 : message.Trim();
             aiBusy = false;
             aiButton.Enabled = currentResult != null;
-            aiButton.Text = hasAiUsage ? "✦ AI 已补充" : "AI 用法";
+            aiButton.Text = hasAiUsage ? "✦ AI 已补充" : "AI 详解";
             fullTextTip.SetToolTip(aiButton, text);
             if (currentResult != null &&
                 String.Equals(currentResult.MatchKind, "ai_pending", StringComparison.Ordinal))
@@ -2551,7 +2551,7 @@ namespace SGFloatingTranslator
             providerPill.Text = currentProvider;
             usageLabel.Text = currentUsage;
             aiButton.Enabled = currentResult != null;
-            aiButton.Text = hasAiUsage ? "✦ AI 已补充" : "AI 用法";
+            aiButton.Text = hasAiUsage ? "✦ AI 已补充" : "AI 详解";
             UpdateToolTips();
             ApplyContentLayout();
             Invalidate(true);
@@ -2573,6 +2573,8 @@ namespace SGFloatingTranslator
             clone.Provider = source.Provider;
             clone.MatchKind = source.MatchKind;
             clone.Phonetic = source.Phonetic;
+            clone.AcademicNotes = source.AcademicNotes;
+            clone.CoverageNote = source.CoverageNote;
             clone.PartOfSpeech = source.PartOfSpeech;
             clone.PracticalUsageEn = source.PracticalUsageEn;
             clone.PracticalUsageZh = source.PracticalUsageZh;
@@ -2816,7 +2818,7 @@ namespace SGFloatingTranslator
             fullTextTip.SetToolTip(providerPill, "内容来源：" + currentProvider);
             fullTextTip.SetToolTip(aiButton, hasAiUsage
                 ? "已补充 AI 生活用法；点击可重新生成。"
-                : "使用 Gemini 或 DeepSeek 补充真实生活用法。只有点击后才会联网。");
+                : "使用 Gemini 或 DeepSeek 补充释义、音标与学术用法。只有点击后才会联网。");
         }
 
         private void Dismiss()
@@ -3090,6 +3092,8 @@ namespace SGFloatingTranslator
         {
             if (result == null) return String.Empty;
             string examples = JoinUsage(result.PracticalUsageEn, result.PracticalUsageZh);
+            if (!String.IsNullOrWhiteSpace(result.AcademicNotes)) examples += "\r\n学术语境：" + result.AcademicNotes;
+            if (!String.IsNullOrWhiteSpace(result.CoverageNote)) examples += "\r\n" + result.CoverageNote;
             string exampleSentence = JoinUsage(result.ExampleEn, result.ExampleZh);
             if (!String.IsNullOrWhiteSpace(exampleSentence) &&
                 !String.Equals(examples, exampleSentence, StringComparison.OrdinalIgnoreCase))
@@ -3122,7 +3126,7 @@ namespace SGFloatingTranslator
             if (text.Length == 0) return String.Empty;
             if ((text.StartsWith("/") && text.EndsWith("/")) ||
                 (text.StartsWith("[") && text.EndsWith("]"))) return text;
-            return "/" + text + "/";
+            return text;
         }
 
         private static string InferPartOfSpeech(string english, TranslationResult result)

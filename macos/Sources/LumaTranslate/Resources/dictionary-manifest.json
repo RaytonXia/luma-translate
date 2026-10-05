@@ -1,15 +1,21 @@
 {
-  "format": "SGFT-ECDICT-1",
-  "library_version": "ECDICT-core-2026-07-22+SG-overlay-1",
-  "source_project": "https://github.com/skywind3000/ECDICT",
-  "source_file": "ecdict.csv",
-  "source_download_date": "2026-07-22",
-  "core_record_count": 47149,
-  "selection_rule": "Entries with Chinese translation and English definition that are Oxford/core tagged, Collins ranked, tagged for a learning list, or in the top 50000 BNC/contemporary frequency ranks.",
-  "runtime_file": "offline_ecdict_core.tsv",
-  "runtime_sha256": "9B4BFF28B58DC1C0A0218912AA16B7DE70E1F22EBBCEDA0D0F93073FB812100A",
-  "source_compressed_file": "offline_ecdict_core.tsv.gz",
-  "source_compressed_sha256": "EE70FC372920B51E1355D2BC210AB45BB8FD5813116AF5D2AA4C6A07918DE73D",
-  "swift_resource_name": "offline_ecdict_core.tsv",
-  "license": "MIT; see ../../licenses/ECDICT_LICENSE.txt and ../../THIRD_PARTY_NOTICES.md"
+  "version": "ECDICT-expanded-2026-10-05+academic-1",
+  "entries": 767778,
+  "phrases": 365230,
+  "english_definitions": 158731,
+  "phonetics": 217915,
+  "supplement_entries": 34,
+  "examples_are": "Original illustrative examples, not quotations or research findings",
+  "source_url": "https://github.com/skywind3000/ECDICT",
+  "source_commit": "bc015ed2e24a7abef49fc6dbbb7fe32c1dadaf8b",
+  "source_csv_sha256": "1a6947e04785db63613a92e14903cdae7954f7e84860b10e68e5c7cbb3f9c3cf",
+  "resource_sha256": "66534f38ee0489270749c2faa1f5d16af822f22a4769a07f7dfcb252d9d53841",
+  "license": "MIT; see ECDICT_LICENSE.txt",
+  "coverage": "All eligible Chinese entries in the pinned upstream CSV. Missing English definitions, phonetics and examples are explicitly labelled. Neither this data nor AI output guarantees every historical or discipline-specific sense.",
+  "academic_reference_notes": [
+    "https://doi.org/10.1080/00031305.2016.1154108",
+    "https://www.itl.nist.gov/div898/handbook/eda/section3/eda352.htm",
+    "https://www.itl.nist.gov/div898/handbook/prc/section2/prc222.htm",
+    "https://www.cochrane.org/authors/handbooks-and-manuals/handbook/current/chapter-08"
+  ]
 }

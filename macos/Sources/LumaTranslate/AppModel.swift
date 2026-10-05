@@ -71,9 +71,11 @@ final class AppModel: ObservableObject {
     private let ocr = ScreenOCRService()
     private let aiClient = AITranslationClient()
     private let mouse = MouseGestureController()
-    private let selectionOverlay = SelectionOverlayController()
-    private let cursorBadge = CursorBadgeController()
-    private let popup = QuickPopupController()
+    // SwiftUI constructs App/StateObject before NSApplication has finished starting.
+    // AppKit windows must be created only after the application is initialized.
+    private lazy var selectionOverlay = SelectionOverlayController()
+    private lazy var cursorBadge = CursorBadgeController()
+    private lazy var popup = QuickPopupController()
     private var dictionary: OfflineDictionary?
     private var pendingAIRequest: PendingAIRequest?
     private var workTask: Task<Void, Never>?

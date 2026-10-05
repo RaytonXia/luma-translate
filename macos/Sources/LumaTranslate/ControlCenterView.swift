@@ -187,7 +187,7 @@ private struct ResultCard: View {
                                     .foregroundStyle(.secondary)
                             }
                             if !result.phonetic.isEmpty {
-                                Text("/\(result.phonetic)/")
+                                Text(result.phonetic)
                                     .font(.system(size: 11, design: .monospaced))
                                     .foregroundStyle(.secondary)
                             }
@@ -211,7 +211,7 @@ private struct ResultCard: View {
                     ResultSection(title: "PLAIN ENGLISH", primary: result.simpleEnglish)
                 }
                 if !result.practicalUsageZh.isEmpty || !result.practicalUsageEn.isEmpty {
-                    ResultSection(title: "日常用法", primary: result.practicalUsageZh, secondary: result.practicalUsageEn)
+                    ResultSection(title: "用法与搭配", primary: result.practicalUsageZh, secondary: result.practicalUsageEn)
                 }
                 if !result.exampleEn.isEmpty {
                     ResultSection(title: "例句", primary: result.exampleEn, secondary: result.exampleZh)
@@ -220,6 +220,8 @@ private struct ResultCard: View {
                     ResultSection(title: "SINGAPORE", primary: result.singaporeNote)
                 }
 
+                if !result.academicNotes.isEmpty { ResultSection(title: "学术语境", primary: result.academicNotes) }
+                if !result.coverageNote.isEmpty { ResultSection(title: "词条来源与覆盖", primary: result.coverageNote) }
                 Text(result.meaningZh)
                     .font(.system(size: 11.5))
                     .foregroundStyle(.secondary)

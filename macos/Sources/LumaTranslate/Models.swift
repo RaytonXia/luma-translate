@@ -13,6 +13,8 @@ struct TranslationResult: Equatable, Sendable {
     var provider = "offline"
     var matchKind = ""
     var phonetic = ""
+    var academicNotes = ""
+    var coverageNote = ""
     var partOfSpeech = ""
     var practicalUsageEn = ""
     var practicalUsageZh = ""

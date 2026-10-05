@@ -21,7 +21,14 @@ uname -m >> "$VERIFY_DIR/system.txt"
 APP_PID=$!
 for i in {1..90}; do
   if ! kill -0 "$APP_PID" 2>/dev/null; then
-    wait "$APP_PID"
+    if ! wait "$APP_PID"; then
+      sleep 3
+      cp "$HOME"/Library/Logs/DiagnosticReports/LumaTranslate* "$VERIFY_DIR/" 2>/dev/null || true
+      /usr/bin/log show --last 2m --style compact --predicate 'process == "LumaTranslate"' > "$VERIFY_DIR/system-log.txt" 2>&1 || true
+      lldb --batch -o run -o 'thread backtrace all' -- "$APP/Contents/MacOS/LumaTranslate" --verify-runtime "$VERIFY_DIR" > "$VERIFY_DIR/debugger.txt" 2>&1 || true
+      cat "$VERIFY_DIR/runtime.log"
+      exit 1
+    fi
     cat "$VERIFY_DIR/runtime.json"
     exit 0
   fi

@@ -79,7 +79,7 @@ namespace SGFloatingTranslator
         private static void TestTokenBreakdown(OfflineDictionaryTranslator offline)
         {
             TranslationResult result = offline.Translate("Please take the MRT to the hawker centre.");
-            Check("Sentence labelled non-machine", result.MatchKind == "token_breakdown" && result.Translation.Contains("非整句机器翻译"));
+            Check("Sentence labelled non-machine", result.MatchKind == "token_breakdown" && result.Translation.Contains("逐词参考"));
             Check("Sentence local coverage", result.CoveredWords > 0 && result.TotalWords >= result.CoveredWords);
             Check("Sentence never claims Gemini", result.Provider == "offline" && !result.MeaningZh.Contains("已发送到 Google"));
         }
@@ -264,6 +264,9 @@ namespace SGFloatingTranslator
             Dictionary<string, object> inner = new Dictionary<string, object>();
             inner["translation_zh"] = "请在这里等候。";
             inner["part_of_speech"] = "sentence";
+            inner["phonetic"] = "Not applicable";
+            inner["academic_notes"] = "无特定学术用法。";
+            inner["coverage_note"] = "按提供的句子解释。";
             inner["explanation_en"] = "Stay in this place until something happens.";
             inner["practical_usage_en"] = "Use this when asking someone not to leave for a short time.";
             inner["practical_usage_zh"] = "短时间请别人不要离开时使用。";
@@ -349,6 +352,9 @@ namespace SGFloatingTranslator
             Dictionary<string, object> resultData = new Dictionary<string, object>();
             resultData["translation_zh"] = "熟食中心";
             resultData["part_of_speech"] = "noun phrase";
+            resultData["phonetic"] = "BrE /ˈhɔːkə ˌsentə/";
+            resultData["academic_notes"] = "用于讨论城市公共餐饮空间。";
+            resultData["coverage_note"] = "按新加坡语境解释。";
             resultData["explanation_en"] = "A food centre with many cooked-food stalls.";
             resultData["practical_usage_en"] = "Use it when arranging where to eat in Singapore.";
             resultData["practical_usage_zh"] = "在新加坡约人吃饭、说明地点时使用。";
@@ -367,6 +373,7 @@ namespace SGFloatingTranslator
             TranslationResult adapted = parsed.ToTranslationResult();
             Check("DeepSeek parser Chinese", parsed.TranslationZh == "熟食中心");
             Check("DeepSeek parser usage", parsed.PracticalUsageEn.Contains("Singapore"));
+            Check("DeepSeek retains IPA and academic usage", adapted.Phonetic.Contains("hɔːkə") && adapted.AcademicNotes.Contains("餐饮") && adapted.CoverageNote.Contains("语境"));
             Check("DeepSeek adapter provider", adapted.Provider == "deepseek" && adapted.PartOfSpeech == "noun phrase");
             Check("DeepSeek adapter practical fields", adapted.PracticalUsageZh.Contains("新加坡"));
         }

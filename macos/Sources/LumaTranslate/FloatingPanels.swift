@@ -258,7 +258,7 @@ private struct QuickPopupView: View {
                         .font(.system(size: 23, weight: .regular, design: .serif))
                         .lineLimit(2)
                     HStack(spacing: 5) {
-                        if !result.phonetic.isEmpty { Text("/\(result.phonetic)/") }
+                        if !result.phonetic.isEmpty { Text(result.phonetic) }
                         if !result.partOfSpeech.isEmpty { Text(result.partOfSpeech) }
                     }
                     .font(.system(size: 10.5, weight: .medium, design: .monospaced))
@@ -280,11 +280,13 @@ private struct QuickPopupView: View {
                 VStack(alignment: .leading, spacing: 15) {
                     PopupSection(eyebrow: "简体中文", text: result.translation)
                     PopupSection(eyebrow: "Plain English", text: result.simpleEnglish)
-                    PopupSection(eyebrow: "日常用法", text: result.practicalUsageZh, secondary: result.practicalUsageEn)
+                    PopupSection(eyebrow: "用法与搭配", text: result.practicalUsageZh, secondary: result.practicalUsageEn)
                     PopupSection(eyebrow: "例句", text: result.exampleEn, secondary: result.exampleZh)
                     if !result.singaporeNote.isEmpty {
                         PopupSection(eyebrow: "Singapore", text: result.singaporeNote)
                     }
+                    if !result.academicNotes.isEmpty { PopupSection(eyebrow: "学术语境", text: result.academicNotes) }
+                    if !result.coverageNote.isEmpty { PopupSection(eyebrow: "来源与覆盖", text: result.coverageNote) }
                     if !result.meaningZh.isEmpty {
                         Text(result.meaningZh)
                             .font(.system(size: 10.5))

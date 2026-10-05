@@ -1,0 +1,342 @@
+[
+  {
+    "word": "significant",
+    "phonetic": "AmE /sɪɡˈnɪfɪkənt/",
+    "translation": "[统计学] 统计上显著的；[一般用法] 重要的、明显的、有意义的",
+    "definition": "In statistics, meeting a stated significance criterion under a specified test. In general use, important or noticeable.",
+    "example_en": "The difference was statistically significant but small.",
+    "example_zh": "该差异具有统计学显著性，但幅度很小。",
+    "academic_notes": "statistically significant 通常译为“具有统计学显著性”，不自动意味着效应大、有实际价值或存在因果关系。",
+    "mode": "append"
+  },
+  {
+    "word": "significance",
+    "phonetic": "AmE /sɪɡˈnɪfɪkəns/",
+    "translation": "[统计学] 显著性；[一般用法] 重要性；意义",
+    "definition": "Statistical significance concerns a test criterion; practical significance concerns substantive importance.",
+    "example_en": "Statistical significance does not establish practical importance.",
+    "example_zh": "统计学显著性并不确立实际重要性。",
+    "academic_notes": "区分 statistical significance（统计显著性）、practical significance（实际意义）和 significance level（显著性水平）。",
+    "mode": "append"
+  },
+  {
+    "word": "power",
+    "phonetic": "AmE /ˈpaʊər/",
+    "translation": "[统计学] 检验功效；[数学] 幂；[物理学] 功率",
+    "definition": "Statistical power is the probability of rejecting a null hypothesis under a specified alternative and study design.",
+    "example_en": "The study was designed to have adequate statistical power.",
+    "example_zh": "该研究的设计旨在获得足够的统计功效。",
+    "academic_notes": "在研究设计中 power 常译为“检验功效/统计功效”，不是“力量”；必须结合备择效应、样本量和检验方法理解。",
+    "mode": "append"
+  },
+  {
+    "word": "control",
+    "phonetic": "AmE /kənˈtroʊl/",
+    "translation": "[实验研究] 对照；对照组；[分析] 控制（变量）",
+    "definition": "A control provides a comparison in an experiment; controlling for a variable means accounting for it in an analysis.",
+    "example_en": "The analysis controlled for age and education.",
+    "example_zh": "分析控制了年龄和教育程度的影响。",
+    "academic_notes": "control group＝对照组；control for＝控制/调整某变量。控制变量本身不能保证消除全部混杂。",
+    "mode": "append"
+  },
+  {
+    "word": "bias",
+    "phonetic": "AmE /ˈbaɪəs/",
+    "translation": "[研究方法] 偏倚；[统计估计] 偏差；[一般] 偏见",
+    "definition": "Research bias is a systematic distortion. Estimator bias is the difference between its expected value and the target parameter.",
+    "example_en": "Selection bias may affect the estimated association.",
+    "example_zh": "选择偏倚可能影响所估计的关联。",
+    "academic_notes": "研究中的 bias 常译为“偏倚”，estimator bias 常译为“估计量偏差”；不要一概译为主观“偏见”。",
+    "mode": "append"
+  },
+  {
+    "word": "confidence interval",
+    "phonetic": "AmE /ˈkɑːnfɪdəns ˈɪntərvəl/",
+    "translation": "n. 置信区间",
+    "definition": "An interval calculated by a procedure with a specified long-run coverage rate for a population parameter.",
+    "example_en": "The estimate was reported with a 95% confidence interval.",
+    "example_zh": "报告在给出估计值的同时给出了 95% 置信区间。",
+    "academic_notes": "频率学派的 95% 指重复抽样程序的长期覆盖率；不能直接解读为已算出的特定区间有 95% 的概率包含固定参数。",
+    "mode": "replace"
+  },
+  {
+    "word": "null hypothesis",
+    "phonetic": "AmE /nʌl haɪˈpɑːθəsɪs/",
+    "translation": "n. 原假设；零假设",
+    "definition": "The specified hypothesis assessed by a statistical test, often representing no difference or no association.",
+    "example_en": "The data did not provide sufficient evidence to reject the null hypothesis.",
+    "example_zh": "数据未提供足够证据来拒绝原假设。",
+    "academic_notes": "不能译为“虚假的假说”。未拒绝原假设不等于证明原假设为真。",
+    "mode": "replace"
+  },
+  {
+    "word": "p-value",
+    "phonetic": "AmE /ˈpiː ˌvæljuː/",
+    "translation": "n. p 值",
+    "definition": "Under a specified null model, the probability of a test statistic at least as extreme as the observed one.",
+    "example_en": "The authors reported exact p-values alongside effect estimates.",
+    "example_zh": "作者在报告效应估计值的同时报告了具体的 p 值。",
+    "academic_notes": "p 值不是原假设为真的概率，也不是效应大小。解释依赖检验的零模型及其假设。",
+    "mode": "replace"
+  },
+  {
+    "word": "effect size",
+    "phonetic": "AmE /ɪˈfekt saɪz/",
+    "translation": "n. 效应量；效应大小",
+    "definition": "A quantitative measure of the magnitude of a difference, relationship, or intervention effect.",
+    "example_en": "A small p-value can accompany a small effect size.",
+    "example_zh": "很小的 p 值也可能对应很小的效应量。",
+    "academic_notes": "应结合效应量定义、量纲和不确定性解释；与统计显著性区分。",
+    "mode": "replace"
+  },
+  {
+    "word": "randomized controlled trial",
+    "phonetic": "AmE /ˈrændəmaɪzd kənˈtroʊld ˈtraɪəl/",
+    "translation": "n. 随机对照试验",
+    "definition": "A comparative study in which participants or other units are assigned to intervention groups by a random process.",
+    "example_en": "Participants were allocated to two groups in a randomized controlled trial.",
+    "example_zh": "在一项随机对照试验中，参与者被分配至两个组。",
+    "academic_notes": "常缩写为 RCT；randomized 指随机分配，不能与随机抽样混为一谈。",
+    "mode": "replace"
+  },
+  {
+    "word": "confounding",
+    "phonetic": "AmE /kənˈfaʊndɪŋ/",
+    "translation": "n. 混杂；混杂作用",
+    "definition": "Distortion of an exposure-outcome association by other factors related to the exposure and outcome.",
+    "example_en": "The authors considered residual confounding in the discussion.",
+    "example_zh": "作者在讨论中考虑了残余混杂。",
+    "academic_notes": "因果推断语境译为“混杂”，不是“困惑”。是否构成混杂需结合研究设计与因果结构判断。",
+    "mode": "replace"
+  },
+  {
+    "word": "association",
+    "phonetic": "AmE /əˌsoʊsiˈeɪʃən/",
+    "translation": "[研究] 关联；[一般] 联合；协会",
+    "definition": "In research, an observed relationship between variables, which alone does not establish causation.",
+    "example_en": "An association does not by itself establish a causal relationship.",
+    "example_zh": "关联本身不能确立因果关系。",
+    "academic_notes": "观察性研究通常用“关联”；不要无依据地加强为“导致”。",
+    "mode": "append"
+  },
+  {
+    "word": "correlation",
+    "phonetic": "AmE /ˌkɔːrəˈleɪʃən/",
+    "translation": "n. 相关；相关性",
+    "definition": "A statistical relationship between variables; a correlation coefficient summarizes a particular form of association.",
+    "example_en": "A weak linear correlation does not rule out a nonlinear relationship.",
+    "example_zh": "线性相关较弱并不能排除非线性关系。",
+    "academic_notes": "明确 Pearson、Spearman 等所用指标；“不相关”与“相互独立”一般不能等同。",
+    "mode": "append"
+  },
+  {
+    "word": "robust",
+    "phonetic": "AmE /roʊˈbʌst/",
+    "translation": "[研究方法] 稳健的；[一般] 强健的；牢固的",
+    "definition": "In research, remaining reasonably stable under specified alternative assumptions, models, or conditions.",
+    "example_en": "The result was robust to alternative model specifications.",
+    "example_zh": "在采用其他模型设定时，该结果仍然稳健。",
+    "academic_notes": "robustness check＝稳健性检验；应说明相对什么变化保持稳健，不能由 robust 推断结果绝对正确。",
+    "mode": "append"
+  },
+  {
+    "word": "empirical",
+    "phonetic": "AmE /ɪmˈpɪrɪkəl/",
+    "translation": "adj. 实证的；以观察或经验为依据的",
+    "definition": "Based on observation or measured evidence rather than theoretical reasoning alone.",
+    "example_en": "The model was evaluated using empirical data.",
+    "example_zh": "该模型使用实证数据进行了评估。",
+    "academic_notes": "empirical evidence＝实证证据；不等于 experimental（实验的）。",
+    "mode": "append"
+  },
+  {
+    "word": "validity",
+    "phonetic": "AmE /vəˈlɪdəti/",
+    "translation": "[研究与测量] 效度；[逻辑/一般] 有效性；成立性",
+    "definition": "In measurement, the extent to which evidence supports a proposed interpretation and use of scores.",
+    "example_en": "The study examined the construct validity of the scale.",
+    "example_zh": "该研究检验了量表的构念效度。",
+    "academic_notes": "construct validity＝构念效度；internal validity＝内部效度；external validity＝外部效度。",
+    "mode": "append"
+  },
+  {
+    "word": "reliability",
+    "phonetic": "AmE /rɪˌlaɪəˈbɪləti/",
+    "translation": "[测量] 信度；[工程/一般] 可靠性",
+    "definition": "In measurement, consistency under specified conditions; in engineering, dependable performance over time.",
+    "example_en": "The questionnaire showed acceptable test-retest reliability.",
+    "example_zh": "该问卷表现出可接受的重测信度。",
+    "academic_notes": "测量信度高不等于效度高；工程学语境通常译为“可靠性”。",
+    "mode": "append"
+  },
+  {
+    "word": "heteroscedasticity",
+    "phonetic": "AmE /ˌhetəroʊskəˌdæsˈtɪsəti/",
+    "translation": "n. 异方差性",
+    "definition": "Variation in the conditional variance of errors across observations or levels of explanatory variables.",
+    "example_en": "The analysis used standard errors robust to heteroscedasticity.",
+    "example_zh": "该分析采用了异方差稳健标准误。",
+    "academic_notes": "常与 homoscedasticity（同方差性）对照；不要与均值差异混淆。",
+    "mode": "replace"
+  },
+  {
+    "word": "systematic review",
+    "phonetic": "AmE /ˌsɪstəˈmætɪk rɪˈvjuː/",
+    "translation": "n. 系统综述；系统评价",
+    "definition": "A review that uses explicit, planned methods to identify, select, appraise, and synthesize relevant evidence.",
+    "example_en": "The systematic review included studies that met predefined criteria.",
+    "example_zh": "该系统综述纳入了符合预设标准的研究。",
+    "academic_notes": "系统综述不一定包含 meta-analysis（荟萃分析/元分析）。",
+    "mode": "replace"
+  },
+  {
+    "word": "meta-analysis",
+    "phonetic": "AmE /ˌmetə əˈnæləsɪs/",
+    "translation": "n. 荟萃分析；元分析",
+    "definition": "Statistical methods for combining quantitative results from multiple studies.",
+    "example_en": "The meta-analysis combined estimates from comparable studies.",
+    "example_zh": "该荟萃分析合并了可比研究的估计值。",
+    "academic_notes": "需考虑研究异质性、偏倚和可比性；不是“元数据分析”。",
+    "mode": "replace"
+  },
+  {
+    "word": "generalizability",
+    "phonetic": "AmE /ˌdʒenərəlaɪzəˈbɪləti/",
+    "translation": "n. 可推广性；可概括性",
+    "definition": "The extent to which findings apply beyond the people, setting, or conditions studied.",
+    "example_en": "The restricted sample may limit the generalizability of the findings.",
+    "example_zh": "受限的样本可能限制研究结果的可推广性。",
+    "academic_notes": "关注结果适用的目标人群或情境，不等同于研究结果在原样本中的统计显著性。",
+    "mode": "replace"
+  },
+  {
+    "word": "novel",
+    "phonetic": "AmE /ˈnɑːvəl/",
+    "translation": "[学术形容词] 新颖的；创新的",
+    "definition": "As an academic adjective, new or original in a specified research context.",
+    "example_en": "The paper proposes a novel approach to the problem.",
+    "example_zh": "该论文提出了一种解决该问题的新方法。",
+    "academic_notes": "注意词性：a novel（名词）是“一部小说”；a novel method（形容词）是“一种新方法”。",
+    "mode": "append"
+  },
+  {
+    "word": "subject",
+    "phonetic": "AmE noun /ˈsʌbdʒɪkt/; verb /səbˈdʒekt/",
+    "translation": "[研究] 受试者；研究对象；[语法] 主语；[一般] 主题",
+    "definition": "In research, a person or other entity being studied; in grammar, a clause element typically identifying what a statement is about.",
+    "example_en": "Each subject completed the same task.",
+    "example_zh": "每名受试者都完成了相同的任务。",
+    "academic_notes": "涉及人的研究中常优先用 participant（参与者）；subject to 可表示“受……影响/约束”或“以……为条件”。",
+    "mode": "append"
+  },
+  {
+    "word": "in light of",
+    "phonetic": "AmE /ɪn laɪt əv/",
+    "translation": "prep. phrase 根据；鉴于；考虑到",
+    "definition": "Used to introduce information that changes or supports an interpretation or decision.",
+    "example_en": "The conclusion was revised in light of the new evidence.",
+    "example_zh": "鉴于新的证据，结论作了修订。",
+    "academic_notes": "常用于讨论和结论部分；不能按字面译为“在……的光下”。",
+    "mode": "replace"
+  },
+  {
+    "word": "account for",
+    "phonetic": "AmE /əˈkaʊnt fɔːr/",
+    "translation": "1. 解释；说明原因。\n2. 占（某一比例）。\n3. 将……纳入考虑。",
+    "definition": "1. Explain why something happens.\n2. Constitute a stated share.\n3. Take something into consideration.",
+    "example_en": "1. The model accounts for the observed pattern.\n2. This group accounts for half the sample.\n3. The analysis accounts for seasonal variation.",
+    "example_zh": "1. 该模型解释了所观察到的模式。\n2. 该组占样本的一半。\n3. 该分析考虑了季节变化。",
+    "academic_notes": "根据宾语与语境区分“解释”“占比”和“考虑”，不要固定为一个译法。",
+    "mode": "replace"
+  },
+  {
+    "word": "with respect to",
+    "phonetic": "AmE /wɪð rɪˈspekt tuː/",
+    "translation": "prep. phrase 关于；就……而言；[数学] 对于（某变量）",
+    "definition": "Concerning a particular topic or variable.",
+    "example_en": "The derivative is taken with respect to time.",
+    "example_zh": "该导数是对时间求得的。",
+    "academic_notes": "数学中 differentiate with respect to x＝对 x 求导，不是“尊重 x”。",
+    "mode": "replace"
+  },
+  {
+    "word": "rule out",
+    "phonetic": "AmE /ruːl aʊt/",
+    "translation": "phrasal verb 排除（可能性）；使……不可能",
+    "definition": "Exclude something as a possibility or prevent it from being considered.",
+    "example_en": "The data do not rule out an alternative explanation.",
+    "example_zh": "这些数据并未排除另一种解释。",
+    "academic_notes": "注意否定范围：cannot rule out 不能译成“已排除”。",
+    "mode": "replace"
+  },
+  {
+    "word": "on the other hand",
+    "phonetic": "AmE /ɑːn ði ˈʌðər hænd/",
+    "translation": "另一方面（引出对照观点）",
+    "definition": "Introduces a contrasting consideration, often balancing an earlier statement.",
+    "example_en": "The method is simple; on the other hand, it requires more data.",
+    "example_zh": "该方法很简单；另一方面，它需要更多数据。",
+    "academic_notes": "通常表达对照或权衡，不宜用于没有对比关系的随意补充。",
+    "mode": "replace"
+  },
+  {
+    "word": "the early bird catches the worm",
+    "phonetic": "AmE /ði ˈɜːrli bɜːrd ˈkætʃɪz ðə wɜːrm/",
+    "translation": "proverb 早起的鸟儿有虫吃；先行动者往往更有机会",
+    "definition": "Acting early can give someone an advantage.",
+    "example_en": "She applied early: the early bird catches the worm.",
+    "example_zh": "她很早就提交了申请：先行动的人往往更有机会。",
+    "academic_notes": "比喻及时行动的优势；不是保证早行动一定成功。正式学术写作通常用明确论述替代谚语。",
+    "mode": "replace"
+  },
+  {
+    "word": "better late than never",
+    "phonetic": "AmE /ˈbetər leɪt ðən ˈnevər/",
+    "translation": "proverb 迟做总比不做好；晚到总比不到好",
+    "definition": "Doing something late is preferable to not doing it at all.",
+    "example_en": "He finally submitted the form—better late than never.",
+    "example_zh": "他终于交了表格——迟交总比不交好。",
+    "academic_notes": "用于评价迟来的行动，可带宽慰或轻微责备，取决于语气。",
+    "mode": "replace"
+  },
+  {
+    "word": "a blessing in disguise",
+    "phonetic": "AmE /ə ˈblesɪŋ ɪn dɪsˈɡaɪz/",
+    "translation": "idiom 因祸得福的事；看似不幸却带来好处的事",
+    "definition": "An initially unwelcome event that later proves beneficial.",
+    "example_en": "Missing that train was a blessing in disguise.",
+    "example_zh": "错过那班火车后来反而成了一件好事。",
+    "academic_notes": "表达结果发生转变，不是一般意义上的“伪装的祝福”。",
+    "mode": "replace"
+  },
+  {
+    "word": "the tip of the iceberg",
+    "phonetic": "AmE /ðə tɪp əv ði ˈaɪsbɜːrɡ/",
+    "translation": "idiom 冰山一角（已显露的小部分，背后还有更多）",
+    "definition": "The small visible part of a much larger, partly hidden situation.",
+    "example_en": "The reported errors may be only the tip of the iceberg.",
+    "example_zh": "已报告的错误可能只是冰山一角。",
+    "academic_notes": "常用于问题规模尚未完全显现的语境，避免把比喻当作实际量化判断。",
+    "mode": "replace"
+  },
+  {
+    "word": "actions speak louder than words",
+    "phonetic": "AmE /ˈækʃənz spiːk ˈlaʊdər ðən wɜːrdz/",
+    "translation": "proverb 行动胜于言语；事实胜于雄辩",
+    "definition": "What people do is often more informative than what they say they will do.",
+    "example_en": "She demonstrated her commitment: actions speak louder than words.",
+    "example_zh": "她用行动表明了自己的投入：行动胜于言语。",
+    "academic_notes": "常用于强调实践；根据上下文选择自然中文表达。",
+    "mode": "replace"
+  },
+  {
+    "word": "every cloud has a silver lining",
+    "phonetic": "AmE /ˈevri klaʊd hæz ə ˈsɪlvər ˈlaɪnɪŋ/",
+    "translation": "proverb 不幸之中也可能有积极的一面",
+    "definition": "Even a difficult situation may contain something hopeful or beneficial.",
+    "example_en": "The delay gave us time to revise; every cloud has a silver lining.",
+    "example_zh": "延期让我们有时间修订；坏事中也有积极的一面。",
+    "academic_notes": "鼓励性的比喻，不应作为客观保证或研究结论。",
+    "mode": "replace"
+  }
+]

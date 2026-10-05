@@ -6,6 +6,8 @@ private struct OfflineEntry: Sendable {
     var definition: String
     var translation: String
     var exchange: String
+    var academicNotes = ""
+    var source = ""
     var exampleEn = ""
     var exampleZh = ""
     var singaporeNote = ""
@@ -13,7 +15,7 @@ private struct OfflineEntry: Sendable {
 }
 
 final class OfflineDictionary: @unchecked Sendable {
-    static let libraryVersion = "ECDICT-core-2026-07-22+SG-overlay-1-mac"
+    static let libraryVersion = "ECDICT-expanded-2026-10-05+academic-1"
 
     private var entries: [String: OfflineEntry] = [:]
     private let irregularForms: [String: String] = [
@@ -92,8 +94,8 @@ final class OfflineDictionary: @unchecked Sendable {
             }
 
             covered += foundLength
-            chineseLines.append("\(foundText)：\(firstLine(found.entry.translation))")
-            let definition = firstLine(found.entry.definition)
+            chineseLines.append("\(foundText)：\(found.entry.translation)")
+            let definition = found.entry.definition
             let definitionKey = definition.lowercased()
             if !definition.isEmpty, seenDefinitions.insert(definitionKey).inserted {
                 englishLines.append("\(foundText): \(definition)")
@@ -106,7 +108,7 @@ final class OfflineDictionary: @unchecked Sendable {
         }
 
         var result = TranslationResult()
-        result.translation = chineseLines.joined(separator: "\n")
+        result.translation = "未找到完整语块；以下仅为逐词参考\n" + chineseLines.joined(separator: "\n")
         result.meaningZh = "离线词典覆盖 \(covered)/\(words.count) 个英文词。"
         if !unknown.isEmpty {
             result.meaningZh += " 未收录：\(unknown.prefix(8).joined(separator: "、"))。"
@@ -136,11 +138,11 @@ final class OfflineDictionary: @unchecked Sendable {
             throw LumaError.message("本地词库格式不兼容。 / Offline dictionary format is incompatible.")
         }
 
-        entries.reserveCapacity(60_000)
+        entries.reserveCapacity(800_000)
         while let rawLine = lines.next() {
             let line = rawLine.last == "\r" ? rawLine.dropLast() : rawLine[...]
             let fields = line.split(separator: "\t", omittingEmptySubsequences: false)
-            guard fields.count == 5 else { continue }
+            guard fields.count == 5 || fields.count == 9 else { continue }
             guard
                 let headword = decodeBase64(fields[0]),
                 let phonetic = decodeBase64(fields[1]),
@@ -151,13 +153,17 @@ final class OfflineDictionary: @unchecked Sendable {
                 throw LumaError.message("本地词库内容损坏。 / Offline dictionary data is damaged.")
             }
             let key = TextLogic.lookupKey(headword)
-            if !key.isEmpty, !definition.isEmpty, !translation.isEmpty {
+            if !key.isEmpty, !translation.isEmpty {
                 entries[key] = OfflineEntry(
                     headword: headword,
                     phonetic: phonetic,
                     definition: definition,
                     translation: translation,
-                    exchange: exchange
+                    exchange: exchange,
+                    academicNotes: fields.count == 9 ? (decodeBase64(fields[7]) ?? "") : "",
+                    source: fields.count == 9 ? (decodeBase64(fields[8]) ?? "") : "",
+                    exampleEn: fields.count == 9 ? (decodeBase64(fields[5]) ?? "") : "",
+                    exampleZh: fields.count == 9 ? (decodeBase64(fields[6]) ?? "") : ""
                 )
             }
         }
@@ -248,11 +254,16 @@ final class OfflineDictionary: @unchecked Sendable {
         var result = TranslationResult()
         result.translation = entry.translation
         result.meaningZh = entry.isCustom
-            ? "新加坡本地词条精确匹配；本次没有联网。"
+            ? "本地词库与新加坡用法补充；本次没有联网。"
             : (matchKind == "inflected"
                 ? "已通过词形变化找到本地词典原形；本次没有联网。"
                 : "本地词典精确匹配；本次没有联网。")
-        result.simpleEnglish = entry.definition
+        result.simpleEnglish = entry.definition.isEmpty ? "English definition not included in this offline entry." : entry.definition
+        result.academicNotes = entry.academicNotes
+        result.coverageNote = "来源：\(entry.source.isEmpty ? "ECDICT / 本地补充" : entry.source)。显示词库已收录义项，不代表穷尽全部学科义项。"
+        if entry.phonetic.isEmpty { result.coverageNote += " 本条未收录音标。" }
+        if entry.definition.isEmpty { result.coverageNote += " 本条未收录英文释义。" }
+        if entry.exampleEn.isEmpty { result.coverageNote += " 本条未收录例句；可点击 AI 详解补充。" }
         result.speakText = source
         result.exampleEn = entry.exampleEn
         result.exampleZh = entry.exampleZh
@@ -261,8 +272,8 @@ final class OfflineDictionary: @unchecked Sendable {
         result.matchKind = matchKind
         result.phonetic = entry.phonetic
         result.partOfSpeech = partOfSpeech(for: entry)
-        result.practicalUsageEn = entry.exampleEn
-        result.practicalUsageZh = entry.exampleZh
+        result.practicalUsageEn = ""
+        result.practicalUsageZh = ""
         result.coveredWords = 1
         result.totalWords = 1
         return result
@@ -350,11 +361,13 @@ final class OfflineDictionary: @unchecked Sendable {
         exampleZh: String,
         note: String
     ) {
-        entries[TextLogic.lookupKey(headword)] = OfflineEntry(
+        let key = TextLogic.lookupKey(headword)
+        let existing = entries[key]
+        entries[key] = OfflineEntry(
             headword: headword,
-            phonetic: "",
-            definition: definition,
-            translation: translation,
+            phonetic: existing?.phonetic ?? "",
+            definition: (existing.map { $0.definition + "\n[Singapore usage] " } ?? "") + definition,
+            translation: (existing.map { $0.translation + "\n[新加坡用法] " } ?? "") + translation,
             exchange: "",
             exampleEn: exampleEn,
             exampleZh: exampleZh,
