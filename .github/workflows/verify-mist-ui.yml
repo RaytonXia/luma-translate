@@ -1,0 +1,66 @@
+name: Build and verify Luma desktop installers
+on:
+  workflow_dispatch:
+  push:
+    branches: [codex/luma-mist-ui]
+permissions:
+  contents: read
+jobs:
+  macos:
+    runs-on: macos-14
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+      - name: Swift tests
+        run: swift test --package-path macos
+      - name: Build and verify both architectures
+        env:
+          LUMA_VERSION: 1.1.0
+          LUMA_BUILD_NUMBER: ${{ github.run_number }}
+        run: bash macos/scripts/build-universal.sh
+      - name: Run installed universal app
+        run: bash macos/scripts/verify-runtime.sh
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: Luma-macOS-Universal
+          path: |
+            macos/.build/dist/*
+            macos/.build/verification/*
+          if-no-files-found: warn
+  macos-intel:
+    needs: macos
+    runs-on: macos-15-intel
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/download-artifact@v4
+        with:
+          name: Luma-macOS-Universal
+          path: macos/.build
+      - name: Run same universal app on Intel
+        run: bash macos/scripts/verify-runtime.sh
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: Luma-macOS-Intel-verification
+          path: macos/.build/verification/*
+          if-no-files-found: warn
+  windows:
+    runs-on: windows-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - name: Compile app
+        shell: powershell
+        run: ./source/build.ps1
+      - name: Build per-user installer
+        shell: powershell
+        run: |
+          & 'C:\Program Files (x86)\Inno Setup 6\ISCC.exe' installer/windows.iss
+          if ($LASTEXITCODE -ne 0) { throw 'Installer compiler failed' }
+      - uses: actions/upload-artifact@v4
+        with:
+          name: Luma-Windows-Setup
+          path: dist/*
+          if-no-files-found: error

@@ -6,6 +6,9 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     func applicationDidFinishLaunching(_ notification: Notification) {
         NSApp.setActivationPolicy(.regular)
         AppModel.shared.start()
+        if let directory = RuntimeVerification.outputDirectory {
+            Task { await RuntimeVerification.run(to: directory) }
+        }
     }
 
     func applicationShouldTerminateAfterLastWindowClosed(_ sender: NSApplication) -> Bool {
@@ -28,10 +31,10 @@ struct LumaTranslateApp: App {
     @StateObject private var model = AppModel.shared
 
     var body: some Scene {
-        WindowGroup("Luma Translate") {
+        Window("Luma Translate", id: "control-center") {
             ControlCenterView()
                 .environmentObject(model)
-                .frame(minWidth: 780, minHeight: 650)
+                .frame(minWidth: 820, minHeight: 650)
                 .onAppear { model.start() }
                 .alert("允许发送英文文字？", isPresented: $model.showCloudConsent) {
                     Button("取消", role: .cancel) { model.cancelCloudConsent() }
@@ -45,7 +48,7 @@ struct LumaTranslateApp: App {
                 }
         }
         .windowStyle(.hiddenTitleBar)
-        .defaultSize(width: 880, height: 720)
+        .defaultSize(width: 900, height: 720)
         .commands {
             CommandGroup(after: .pasteboard) {
                 Button("翻译剪贴板") { model.translateClipboardOffline() }

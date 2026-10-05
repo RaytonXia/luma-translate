@@ -2,7 +2,12 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Drawing;
+using System.Drawing.Imaging;
+using System.IO;
+using System.Reflection;
 using System.Runtime.InteropServices;
+using System.Threading;
+using System.Threading.Tasks;
 using System.Web.Script.Serialization;
 using Windows.Globalization;
 using Windows.Media.Ocr;
@@ -37,6 +42,7 @@ namespace SGFloatingTranslator
             TestOfflineDeterminism(offline);
             TestEnglishOnly(offline);
             TestMouseOcrUtilities(offline);
+            TestBitmapOcr(offline);
             TestSelectionGestureUtilities();
 
             Check("Gemini fixed HTTPS endpoint", GeminiTranslator.BuildEndpoint() == "https://generativelanguage.googleapis.com/v1beta/interactions");
@@ -122,6 +128,45 @@ namespace SGFloatingTranslator
                 }
             }
             Check("Windows English OCR installed", englishOcr);
+        }
+
+        private static void TestBitmapOcr(OfflineDictionaryTranslator dictionary)
+        {
+            // Exercises the production PNG -> WinRT decoder -> OCR -> nearest-word
+            // path without screen capture, a mouse hook, or a permission prompt.
+            OcrEngine engine = null;
+            foreach (Language language in OcrEngine.AvailableRecognizerLanguages)
+                if (language.LanguageTag.StartsWith("en-", StringComparison.OrdinalIgnoreCase))
+                { engine = OcrEngine.TryCreateFromLanguage(language); break; }
+            if (engine == null) { Check("OCR integration engine available", false); return; }
+            using (Bitmap bitmap = new Bitmap(640, 160))
+            using (Graphics graphics = Graphics.FromImage(bitmap))
+            using (Font font = new Font("Segoe UI", 42, FontStyle.Regular, GraphicsUnit.Pixel))
+            using (MemoryStream png = new MemoryStream())
+            using (CancellationTokenSource timeout = new CancellationTokenSource(TimeSpan.FromSeconds(15)))
+            {
+                graphics.Clear(Color.White);
+                graphics.DrawString("serendipity", font, Brushes.Black, new PointF(36, 42));
+                bitmap.Save(png, ImageFormat.Png);
+                Type controller = typeof(TranslationMouseController);
+                Type frameType = controller.GetNestedType("CaptureFrame", BindingFlags.NonPublic);
+                object frame = Activator.CreateInstance(frameType, BindingFlags.Instance | BindingFlags.NonPublic,
+                    null, new object[] { new Rectangle(0, 0, 640, 160), png.ToArray() }, null);
+                MethodInfo method = controller.GetMethod("RecognizeNearestWordAsync", BindingFlags.Static | BindingFlags.NonPublic);
+                Task<OcrHit> task = (Task<OcrHit>)method.Invoke(null,
+                    new object[] { engine, frame, new Point(125, 68), timeout.Token });
+                try
+                {
+                    OcrHit hit = task.GetAwaiter().GetResult();
+                    Check("Real bitmap OCR recognizes serendipity", hit != null && hit.Word == "serendipity");
+                    Check("OCR output translates offline", hit != null && dictionary.Translate(hit.Word).Provider == "offline");
+                }
+                catch (Exception ex)
+                {
+                    Console.WriteLine("OCR integration: " + ex.GetType().Name + ": " + ex.Message);
+                    Check("Real bitmap OCR completes", false);
+                }
+            }
         }
 
         private static void TestSelectionGestureUtilities()

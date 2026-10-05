@@ -1824,9 +1824,12 @@ namespace SGFloatingTranslator
             {
                 // 12480 is a common multiple of every animation period used below,
                 // so the wrap never causes a visible phase jump.
-                animationFrame = (animationFrame + 1) % 12480;
                 FollowPointer();
-                RenderLayered();
+                if (state != CursorBadgeState.Ready && UiAccessibility.Animate)
+                {
+                    animationFrame = (animationFrame + 1) % 12480;
+                    RenderLayered();
+                }
             };
         }
 
@@ -1955,62 +1958,19 @@ namespace SGFloatingTranslator
             DrawLumaOrb(graphics, state == CursorBadgeState.AwaitSecondClick);
         }
 
-        /// <summary>Ready / waiting marker: a breathing mint orb with one orbiting spark.</summary>
+        /// <summary>A quiet sage marker, with two dots only while awaiting a click.</summary>
         private void DrawLumaOrb(Graphics graphics, bool awaitingSecondClick)
         {
-            float breath = (float)((Math.Sin(animationFrame * Math.PI / 26.0) + 1.0) / 2.0);
-            PointF centre = new PointF(13F, 15F);
-            double angle = animationFrame * Math.PI / 32.0;
-            float satX = centre.X + (float)(Math.Cos(angle) * 10.2);
-            float satY = centre.Y + (float)(Math.Sin(angle) * 3.4);
-            bool satelliteInFront = Math.Sin(angle) >= 0.0;
-
-            if (!awaitingSecondClick && !satelliteInFront)
-                DrawSatellite(graphics, satX, satY, false);
-
-            // Soft halo that gently swells with the breath cycle.
-            float haloGrow = breath * 1.6F;
-            RectangleF halo = new RectangleF(
-                centre.X - 10.5F - haloGrow, centre.Y - 10.5F - haloGrow,
-                21F + haloGrow * 2F, 21F + haloGrow * 2F);
-            using (GraphicsPath haloPath = new GraphicsPath())
+            using (Brush fill = new SolidBrush(UiPalette.Teal))
+            using (Pen rim = new Pen(Color.FromArgb(230, 255, 255, 255), 1.2F))
             {
-                haloPath.AddEllipse(halo);
-                using (PathGradientBrush glow = new PathGradientBrush(haloPath))
+                graphics.FillEllipse(fill, 7, 9, 12, 12);
+                graphics.DrawEllipse(rim, 7, 9, 12, 12);
+                if (awaitingSecondClick)
                 {
-                    glow.CenterColor = Color.FromArgb(64 + (int)(26 * breath), 96, 228, 200);
-                    glow.SurroundColors = new Color[] { Color.FromArgb(0, 96, 228, 200) };
-                    graphics.FillPath(glow, haloPath);
+                    graphics.FillEllipse(fill, 27, 13, 4, 4);
+                    graphics.FillEllipse(fill, 35, 13, 4, 4);
                 }
-            }
-
-            // Core orb: mint → sky gradient sphere with a white rim and specular dot.
-            RectangleF core = new RectangleF(centre.X - 6F, centre.Y - 6F, 12F, 12F);
-            using (LinearGradientBrush fill = new LinearGradientBrush(
-                new Rectangle((int)core.X - 1, (int)core.Y - 1, 14, 14),
-                Color.FromArgb(252, 52, 214, 183),
-                Color.FromArgb(252, 92, 152, 244),
-                LinearGradientMode.ForwardDiagonal))
-                graphics.FillEllipse(fill, core);
-            using (Pen rim = new Pen(Color.FromArgb(215, 255, 255, 255), 1.1F))
-                graphics.DrawEllipse(rim, core);
-            using (SolidBrush specular = new SolidBrush(Color.FromArgb(185, 255, 255, 255)))
-                graphics.FillEllipse(specular, centre.X - 3.4F, centre.Y - 3.8F, 3.4F, 3.4F);
-
-            if (awaitingSecondClick)
-            {
-                // Two metronome dots: "click · click" — the second beat answers the first.
-                bool firstBeat = (animationFrame / 10) % 2 == 0;
-                int firstAlpha = firstBeat ? 240 : 88;
-                int secondAlpha = firstBeat ? 88 : 240;
-                using (SolidBrush first = new SolidBrush(Color.FromArgb(firstAlpha, 62, 216, 186)))
-                    graphics.FillEllipse(first, 27.5F, 11.6F, 6.4F, 6.4F);
-                using (SolidBrush second = new SolidBrush(Color.FromArgb(secondAlpha, 140, 116, 242)))
-                    graphics.FillEllipse(second, 36.5F, 11.6F, 6.4F, 6.4F);
-            }
-            else if (satelliteInFront)
-            {
-                DrawSatellite(graphics, satX, satY, true);
             }
         }
 
@@ -2029,10 +1989,9 @@ namespace SGFloatingTranslator
             {
                 double phase = (animationFrame * 0.40) - (index * 0.95);
                 float lift = (float)(Math.Sin(phase) * 3.1);
-                float blend = index / 2F;
-                int red = (int)(56 + (148 - 56) * blend);
-                int green = (int)(212 + (126 - 212) * blend);
-                int blue = (int)(186 + (242 - 186) * blend);
+                int red = UiPalette.Teal.R;
+                int green = UiPalette.Teal.G;
+                int blue = UiPalette.Teal.B;
                 int alpha = 150 + (int)(92.0 * ((Math.Sin(phase) + 1.0) / 2.0));
                 using (SolidBrush dot = new SolidBrush(Color.FromArgb(alpha, red, green, blue)))
                     graphics.FillEllipse(dot, 7.4F + index * 12.2F, 12.6F - lift, 7.2F, 7.2F);
@@ -2048,8 +2007,8 @@ namespace SGFloatingTranslator
             {
                 using (LinearGradientBrush fill = new LinearGradientBrush(
                     chip,
-                    Color.FromArgb(250, 42, 205, 176),
-                    Color.FromArgb(248, 122, 103, 236),
+                    UiPalette.Teal,
+                    UiPalette.TealDark,
                     16F))
                     graphics.FillPath(fill, path);
                 using (Pen rim = new Pen(Color.FromArgb(150 + (int)(85 * pulse), 255, 255, 255), 1.1F))
@@ -2101,8 +2060,8 @@ namespace SGFloatingTranslator
     /// </summary>
     public sealed class QuickTranslationPopup : Form
     {
-        private const int LogicalWidth = 396;
-        private const int LogicalTailHeight = 13;
+        private const int LogicalWidth = 412;
+        private const int LogicalTailHeight = 9;
         private const int WmDpiChanged = 0x02E0;
         private const uint MonitorDefaultToNearest = 2;
 
@@ -2192,7 +2151,7 @@ namespace SGFloatingTranslator
             TopMost = true;
             ControlBox = false;
             AutoScaleMode = AutoScaleMode.None;
-            BackColor = Color.FromArgb(11, 62, 72);
+            BackColor = UiPalette.Surface;
             DoubleBuffered = true;
             ResizeRedraw = true;
             KeyPreview = true;
@@ -2201,46 +2160,47 @@ namespace SGFloatingTranslator
             appearTimer.Interval = 15;
             appearTimer.Tick += AppearTick;
 
-            sourceLabel = CreateLabel("SourceWord", 19.0F, FontStyle.Bold, Color.White);
+            sourceLabel = CreateLabel("SourceWord", 22.0F, FontStyle.Regular, UiPalette.Ink);
+            sourceLabel.Font = new Font("Georgia", 22F, FontStyle.Regular);
             sourceLabel.AccessibleName = "英文单词";
 
-            phoneticLabel = CreateLabel("Phonetic", 9.0F, FontStyle.Regular, Color.FromArgb(203, 226, 235));
+            phoneticLabel = CreateLabel("Phonetic", 9.0F, FontStyle.Regular, UiPalette.Muted);
             phoneticLabel.AccessibleName = "音标";
 
             partOfSpeechPill = new PillLabel();
             partOfSpeechPill.Name = "PartOfSpeech";
             partOfSpeechPill.AccessibleName = "词性";
-            partOfSpeechPill.ForeColor = Color.FromArgb(235, 253, 250);
-            partOfSpeechPill.FillColor = Color.FromArgb(74, 255, 255, 255);
-            partOfSpeechPill.BorderColor = Color.FromArgb(56, 255, 255, 255);
+            partOfSpeechPill.ForeColor = UiPalette.TealDark;
+            partOfSpeechPill.FillColor = UiPalette.Mint;
+            partOfSpeechPill.BorderColor = UiPalette.Border;
 
             providerPill = new PillLabel();
             providerPill.Name = "Provider";
             providerPill.AccessibleName = "翻译来源";
-            providerPill.ForeColor = Color.FromArgb(225, 242, 255);
-            providerPill.FillColor = Color.FromArgb(45, 177, 232, 255);
-            providerPill.BorderColor = Color.FromArgb(38, 255, 255, 255);
+            providerPill.ForeColor = UiPalette.TealDark;
+            providerPill.FillColor = UiPalette.Mint;
+            providerPill.BorderColor = UiPalette.Border;
 
-            translationLabel = CreateLabel("ChineseTranslation", 13.0F, FontStyle.Bold, Color.FromArgb(245, 255, 253));
+            translationLabel = CreateLabel("ChineseTranslation", 14.0F, FontStyle.Regular, UiPalette.Ink);
             translationLabel.AccessibleName = "简体中文释义";
 
-            explanationCaption = CreateLabel("EnglishCaption", 7.5F, FontStyle.Bold, Color.FromArgb(154, 218, 225));
-            explanationCaption.Text = "ENGLISH EXPLANATION";
+            explanationCaption = CreateLabel("EnglishCaption", 7.5F, FontStyle.Bold, UiPalette.Muted);
+            explanationCaption.Text = "英文解释";
             explanationCaption.AccessibleName = "英文解释标题";
 
-            explanationLabel = CreateLabel("EnglishExplanation", 9.5F, FontStyle.Regular, Color.FromArgb(230, 242, 246));
+            explanationLabel = CreateLabel("EnglishExplanation", 9.5F, FontStyle.Regular, UiPalette.Ink);
             explanationLabel.AccessibleName = "英文解释";
 
-            usageCaption = CreateLabel("UsageCaption", 7.5F, FontStyle.Bold, Color.FromArgb(179, 244, 222));
-            usageCaption.Text = "REAL-LIFE USAGE  ·  生活用法";
+            usageCaption = CreateLabel("UsageCaption", 7.5F, FontStyle.Bold, UiPalette.TealDark);
+            usageCaption.Text = "日常用法";
             usageCaption.AccessibleName = "实际生活用法标题";
 
-            usageLabel = CreateLabel("UsageText", 9.0F, FontStyle.Regular, Color.FromArgb(239, 252, 248));
+            usageLabel = CreateLabel("UsageText", 9.0F, FontStyle.Regular, UiPalette.Ink);
             usageLabel.AccessibleName = "实际生活用法";
 
-            speakButton = CreateButton("🔊", "朗读英文单词", ButtonTone.Glass);
+            speakButton = CreateButton("听", "朗读英文单词", ButtonTone.Glass);
             explainButton = CreateButton("听解释", "朗读英文解释", ButtonTone.Glass);
-            aiButton = CreateButton("✦ AI 用法", "使用已配置的 AI 生成实际生活用法", ButtonTone.Accent);
+            aiButton = CreateButton("AI 用法", "使用已配置的 AI 生成实际生活用法", ButtonTone.Accent);
             moreButton = CreateButton("详细", "在完整窗口中查看详细内容", ButtonTone.Glass);
             pauseButton = CreateButton("暂停", "暂停鼠标点译", ButtonTone.Glass);
             closeButton = CreateButton("关闭", "关闭这张词典卡片", ButtonTone.Glass);
@@ -2368,7 +2328,7 @@ namespace SGFloatingTranslator
             speakButton.Enabled = !String.IsNullOrWhiteSpace(currentText);
             explainButton.Enabled = result != null && !String.IsNullOrWhiteSpace(result.SimpleEnglish);
             aiButton.Enabled = result != null;
-            aiButton.Text = hasAiUsage ? "✦ AI 已补充" : "✦ AI 用法";
+            aiButton.Text = hasAiUsage ? "✦ AI 已补充" : "AI 用法";
             moreButton.Enabled = result != null;
             UpdateToolTips();
             ShowNear(screenPoint);
@@ -2403,7 +2363,7 @@ namespace SGFloatingTranslator
             speakButton.Enabled = false;
             explainButton.Enabled = false;
             aiButton.Enabled = false;
-            aiButton.Text = "✦ AI 用法";
+            aiButton.Text = "AI 用法";
             moreButton.Enabled = false;
             UpdateToolTips();
             ShowNear(screenPoint);
@@ -2499,7 +2459,7 @@ namespace SGFloatingTranslator
             speakButton.Enabled = !String.IsNullOrWhiteSpace(currentText);
             explainButton.Enabled = !String.IsNullOrWhiteSpace(currentResult.SimpleEnglish);
             aiButton.Enabled = true;
-            aiButton.Text = hasAiUsage ? "✦ AI 已补充" : "✦ AI 用法";
+            aiButton.Text = hasAiUsage ? "✦ AI 已补充" : "AI 用法";
             moreButton.Enabled = true;
             UpdateToolTips();
             ApplyContentLayout();
@@ -2518,7 +2478,7 @@ namespace SGFloatingTranslator
             }
             aiBusy = busy;
             aiButton.Enabled = !busy && currentResult != null;
-            aiButton.Text = busy ? "AI 生成中…" : (hasAiUsage ? "✦ AI 已补充" : "✦ AI 用法");
+            aiButton.Text = busy ? "AI 生成中…" : (hasAiUsage ? "✦ AI 已补充" : "AI 用法");
             if (!String.IsNullOrWhiteSpace(statusText)) fullTextTip.SetToolTip(aiButton, statusText.Trim());
             Invalidate();
         }
@@ -2540,7 +2500,7 @@ namespace SGFloatingTranslator
                 : message.Trim();
             aiBusy = false;
             aiButton.Enabled = currentResult != null;
-            aiButton.Text = hasAiUsage ? "✦ AI 已补充" : "✦ AI 用法";
+            aiButton.Text = hasAiUsage ? "✦ AI 已补充" : "AI 用法";
             fullTextTip.SetToolTip(aiButton, text);
             if (currentResult != null &&
                 String.Equals(currentResult.MatchKind, "ai_pending", StringComparison.Ordinal))
@@ -2591,7 +2551,7 @@ namespace SGFloatingTranslator
             providerPill.Text = currentProvider;
             usageLabel.Text = currentUsage;
             aiButton.Enabled = currentResult != null;
-            aiButton.Text = hasAiUsage ? "✦ AI 已补充" : "✦ AI 用法";
+            aiButton.Text = hasAiUsage ? "✦ AI 已补充" : "AI 用法";
             UpdateToolTips();
             ApplyContentLayout();
             Invalidate(true);
@@ -2666,6 +2626,12 @@ namespace SGFloatingTranslator
         {
             appearStep = 0;
             appearBaseTop = settledTop;
+            if (!UiAccessibility.Animate)
+            {
+                Opacity = 1D;
+                Top = settledTop;
+                return;
+            }
             try
             {
                 Opacity = 0D;
@@ -2905,7 +2871,7 @@ namespace SGFloatingTranslator
 
         protected override void OnPaintBackground(PaintEventArgs e)
         {
-            e.Graphics.Clear(Color.FromArgb(8, 56, 66));
+            e.Graphics.Clear(UiPalette.Surface);
         }
 
         protected override void OnPaint(PaintEventArgs e)
@@ -2917,14 +2883,14 @@ namespace SGFloatingTranslator
             using (GraphicsPath bubble = CreateBubblePath())
             using (LinearGradientBrush gradient = new LinearGradientBrush(
                 ClientRectangle,
-                Color.FromArgb(10, 104, 104),
-                Color.FromArgb(60, 50, 126),
+                UiPalette.Card,
+                UiPalette.Surface,
                 LinearGradientMode.ForwardDiagonal))
             {
                 ApplyBubbleGradientBlend(gradient);
                 e.Graphics.FillPath(gradient, bubble);
 
-                using (Pen border = new Pen(Color.FromArgb(84, 192, 238, 228), Math.Max(1.0F, L(1))))
+                using (Pen border = new Pen(UiPalette.Border, Math.Max(1.0F, L(1))))
                     e.Graphics.DrawPath(border, bubble);
             }
 
@@ -2950,8 +2916,8 @@ namespace SGFloatingTranslator
             {
                 using (LinearGradientBrush divider = new LinearGradientBrush(
                     dividerBounds,
-                    Color.FromArgb(8, 255, 255, 255),
-                    Color.FromArgb(80, 137, 233, 220),
+                    UiPalette.Border,
+                    UiPalette.Border,
                     LinearGradientMode.Horizontal))
                     e.Graphics.FillRectangle(divider, dividerBounds);
             }
@@ -2959,8 +2925,8 @@ namespace SGFloatingTranslator
             if (!usageCardBounds.IsEmpty)
             {
                 using (GraphicsPath card = RoundedRectangle(usageCardBounds, L(12)))
-                using (SolidBrush fill = new SolidBrush(Color.FromArgb(30, 224, 255, 245)))
-                using (Pen outline = new Pen(Color.FromArgb(40, 203, 250, 229), Math.Max(1.0F, L(1))))
+                using (SolidBrush fill = new SolidBrush(Color.FromArgb(180, 228, 239, 232)))
+                using (Pen outline = new Pen(UiPalette.Border, Math.Max(1.0F, L(1))))
                 {
                     e.Graphics.FillPath(fill, card);
                     e.Graphics.DrawPath(outline, card);
@@ -2973,9 +2939,9 @@ namespace SGFloatingTranslator
             ColorBlend blend = new ColorBlend();
             blend.Colors = new Color[]
             {
-                Color.FromArgb(9, 70, 78),
-                Color.FromArgb(24, 62, 104),
-                Color.FromArgb(58, 46, 118)
+                Color.FromArgb(250, 253, 251),
+                Color.FromArgb(242, 248, 244),
+                Color.FromArgb(232, 242, 235)
             };
             blend.Positions = new float[] { 0.0F, 0.55F, 1.0F };
             gradient.InterpolationColors = blend;
@@ -3086,11 +3052,11 @@ namespace SGFloatingTranslator
             twoLines = false;
             string text = sourceLabel.Text;
             if (String.IsNullOrEmpty(text) || availableWidth <= 0) return;
-            float[] ladder = new float[] { 19.0F, 16.0F, 13.5F };
+            float[] ladder = new float[] { 22.0F, 18.0F, 13.5F };
             foreach (float candidate in ladder)
             {
                 size = candidate;
-                using (Font probe = new Font("Microsoft YaHei UI", candidate, FontStyle.Bold, GraphicsUnit.Point))
+                using (Font probe = new Font("Georgia", candidate, FontStyle.Regular, GraphicsUnit.Point))
                 {
                     if (MeasureSingleLine(text, probe) <= availableWidth) return;
                 }
@@ -3103,7 +3069,7 @@ namespace SGFloatingTranslator
         private void ApplyHeadlineFont(float size)
         {
             if (Math.Abs(sourceLabel.Font.Size - size) < 0.1F) return;
-            Font next = new Font("Microsoft YaHei UI", size, FontStyle.Bold, GraphicsUnit.Point);
+            Font next = new Font("Georgia", size, FontStyle.Regular, GraphicsUnit.Point);
             Font previous = headlineFont;
             sourceLabel.Font = next;
             headlineFont = next;
@@ -3275,7 +3241,7 @@ namespace SGFloatingTranslator
                 // layered, custom-painted form. At high DPI that left black corners and
                 // pixels from controls that previously occupied the same area. The whole
                 // surface is painted opaquely in OnPaint before the glass capsule is drawn.
-                BackColor = Color.FromArgb(19, 83, 105);
+                BackColor = UiPalette.Surface;
                 ForeColor = Color.White;
                 Cursor = Cursors.Hand;
                 TabStop = true;
@@ -3332,8 +3298,8 @@ namespace SGFloatingTranslator
                     : new Rectangle(-Left, -Top, Math.Max(1, Parent.ClientSize.Width), Math.Max(1, Parent.ClientSize.Height));
                 using (LinearGradientBrush background = new LinearGradientBrush(
                     parentGradient,
-                    Color.FromArgb(10, 104, 104),
-                    Color.FromArgb(60, 50, 126),
+                    UiPalette.Card,
+                    UiPalette.Surface,
                     LinearGradientMode.ForwardDiagonal))
                 {
                     QuickTranslationPopup.ApplyBubbleGradientBlend(background);
@@ -3354,30 +3320,30 @@ namespace SGFloatingTranslator
                     else if (tone == ButtonTone.Accent)
                     {
                         fill = pressing
-                            ? Color.FromArgb(255, 26, 168, 150)
-                            : hovering ? Color.FromArgb(255, 46, 214, 188) : Color.FromArgb(242, 36, 192, 172);
-                        border = Color.FromArgb(150, 193, 255, 240);
+                            ? UiPalette.TealDark
+                            : hovering ? Color.FromArgb(71, 128, 104) : UiPalette.Teal;
+                        border = UiPalette.Teal;
                     }
                     else
                     {
                         fill = pressing
-                            ? Color.FromArgb(96, 255, 255, 255)
-                            : hovering ? Color.FromArgb(66, 255, 255, 255) : Color.FromArgb(36, 255, 255, 255);
-                        border = Color.FromArgb(54, 220, 246, 246);
+                            ? UiPalette.Mint
+                            : hovering ? Color.White : UiPalette.Card;
+                        border = UiPalette.Border;
                     }
 
                     using (SolidBrush brush = new SolidBrush(fill)) e.Graphics.FillPath(brush, path);
                     using (Pen pen = new Pen(border, 1.0F)) e.Graphics.DrawPath(pen, path);
                 }
 
-                Color textColour = Enabled ? Color.White : Color.FromArgb(126, 222, 232, 235);
+                Color textColour = !Enabled ? UiPalette.Muted : tone == ButtonTone.Accent ? Color.White : UiPalette.Ink;
                 TextRenderer.DrawText(e.Graphics, Text, Font, ClientRectangle, textColour,
                     TextFormatFlags.HorizontalCenter | TextFormatFlags.VerticalCenter |
                     TextFormatFlags.SingleLine | TextFormatFlags.NoPadding);
                 if (Focused && ShowFocusCues)
                 {
                     Rectangle focus = Rectangle.Inflate(ClientRectangle, -4, -4);
-                    ControlPaint.DrawFocusRectangle(e.Graphics, focus, Color.White, Color.Transparent);
+                    ControlPaint.DrawFocusRectangle(e.Graphics, focus, UiPalette.TealDark, Color.Transparent);
                 }
             }
         }

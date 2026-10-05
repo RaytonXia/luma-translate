@@ -1,0 +1,6 @@
+*.exe
+*.pdb
+dist/
+macos/.build/
+verification/
+.DS_Store

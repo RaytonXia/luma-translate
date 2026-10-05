@@ -22,6 +22,8 @@ final class AppModel: ObservableObject {
     @Published var apiKeyDraft = ""
     @Published var rememberAPIKey = true
     @Published var isSpeaking = false
+    var reopenMainWindow: (() -> Void)?
+    weak var controlCenterWindow: NSWindow?
 
     @Published var provider: AIProvider {
         didSet {
@@ -272,8 +274,10 @@ final class AppModel: ObservableObject {
 
     func showMainWindow() {
         NSApp.activate(ignoringOtherApps: true)
-        if let window = NSApp.windows.first(where: { $0.canBecomeMain && $0.level == .normal }) {
+        if let window = controlCenterWindow {
             window.makeKeyAndOrderFront(nil)
+        } else {
+            reopenMainWindow?()
         }
     }
 

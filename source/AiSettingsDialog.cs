@@ -7,7 +7,7 @@ using System.Windows.Forms;
 
 namespace SGFloatingTranslator
 {
-    internal sealed class AiSettingsDialog : Form
+    internal sealed class AiSettingsDialog : GlassForm
     {
         private readonly ComboBox providerBox;
         private readonly ComboBox modelBox;
@@ -64,20 +64,22 @@ namespace SGFloatingTranslator
             // silently blocked saving. Every row is now a fixed, DPI-multiplied height.
             AutoScaleMode = AutoScaleMode.None;
             uiScale = DpiLayout.ScreenScaleFactor(this);
-            ClientSize = new Size(S(640), S(640));
+            Rectangle available = Screen.FromControl(this).WorkingArea;
+            ClientSize = new Size(Math.Min(S(640), available.Width - S(32)),
+                Math.Min(S(660), available.Height - S(32)));
             FormBorderStyle = FormBorderStyle.None;
             StartPosition = FormStartPosition.CenterParent;
             ShowInTaskbar = false;
             TopMost = false;
-            BackColor = Color.FromArgb(232, 237, 246);
+            BackColor = UiPalette.Border;
             Padding = new Padding(1);
             DoubleBuffered = true;
 
             ModernGradientPanel canvas = new ModernGradientPanel();
             canvas.Dock = DockStyle.Fill;
             canvas.CornerRadius = 24;
-            canvas.StartColor = Color.FromArgb(249, 252, 253);
-            canvas.EndColor = Color.FromArgb(243, 240, 253);
+            canvas.StartColor = UiPalette.Card;
+            canvas.EndColor = UiPalette.Surface;
             canvas.GradientAngle = 24F;
             canvas.Padding = new Padding(S(20));
             Controls.Add(canvas);
@@ -105,6 +107,9 @@ namespace SGFloatingTranslator
             root.RowStyles.Add(new RowStyle(SizeType.Absolute, 118));
             root.RowStyles.Add(new RowStyle(SizeType.Absolute, 30));
             root.RowStyles.Add(new RowStyle(SizeType.Absolute, 46));
+            canvas.AutoScroll = true;
+            root.Dock = DockStyle.Top;
+            root.Height = S(604);
             canvas.Controls.Add(root);
 
             TableLayoutPanel titleRow = new TableLayoutPanel();
@@ -116,10 +121,10 @@ namespace SGFloatingTranslator
             Label title = new Label();
             title.Dock = DockStyle.Fill;
             title.Text = "AI 翻译设置";
-            title.Font = new Font("Microsoft YaHei UI", 18F, FontStyle.Bold);
+            title.Font = new Font("Microsoft YaHei UI", 17F, FontStyle.Regular);
             title.ForeColor = UiPalette.Ink;
             title.TextAlign = ContentAlignment.MiddleLeft;
-            ModernButton close = NewButton("×", Color.FromArgb(239, 233, 249), Color.FromArgb(247, 238, 242), UiPalette.Muted);
+            ModernButton close = NewButton("×", UiPalette.Card, UiPalette.Card, UiPalette.Muted);
             close.Size = new Size(S(40), S(40));
             close.Anchor = AnchorStyles.Top | AnchorStyles.Right;
             close.Click += delegate { DialogResult = DialogResult.Cancel; Close(); };
@@ -156,6 +161,7 @@ namespace SGFloatingTranslator
             root.Controls.Add(modelRow, 0, 2);
 
             deepSeekKeyBox = NewKeyBox();
+            deepSeekKeyBox.AccessibleName = "DeepSeek API Key";
             CheckBox deepSeekClear;
             root.Controls.Add(KeyRow(
                 "DeepSeek",
@@ -167,6 +173,7 @@ namespace SGFloatingTranslator
             clearDeepSeekBox = deepSeekClear;
 
             geminiKeyBox = NewKeyBox();
+            geminiKeyBox.AccessibleName = "Gemini API Key";
             CheckBox geminiClear;
             root.Controls.Add(KeyRow(
                 "Gemini",
@@ -189,8 +196,8 @@ namespace SGFloatingTranslator
             ModernGradientPanel privacyCard = new ModernGradientPanel();
             privacyCard.Dock = DockStyle.Fill;
             privacyCard.CornerRadius = 16;
-            privacyCard.StartColor = Color.FromArgb(226, 248, 242);
-            privacyCard.EndColor = Color.FromArgb(237, 231, 252);
+            privacyCard.StartColor = UiPalette.Mint;
+            privacyCard.EndColor = UiPalette.Mint;
             privacyCard.BorderColor = UiPalette.Border;
             privacyCard.Padding = new Padding(S(14), S(10), S(14), S(10));
             TableLayoutPanel privacyLayout = new TableLayoutPanel();
@@ -229,10 +236,10 @@ namespace SGFloatingTranslator
             actions.FlowDirection = FlowDirection.RightToLeft;
             actions.WrapContents = true;
             actions.BackColor = Color.Transparent;
-            ModernButton save = NewButton("保存设置", UiPalette.Teal, UiPalette.Blue, Color.White);
+            ModernButton save = NewButton("保存设置", UiPalette.Teal, UiPalette.Teal, Color.White);
             save.Size = new Size(S(126), S(40));
             save.Click += SaveClicked;
-            ModernButton cancel = NewButton("取消", Color.FromArgb(239, 242, 248), Color.FromArgb(247, 244, 252), UiPalette.Muted);
+            ModernButton cancel = NewButton("取消", UiPalette.Card, UiPalette.Card, UiPalette.Muted);
             cancel.BorderColor = UiPalette.Border;
             cancel.Size = new Size(S(92), S(40));
             cancel.Click += delegate { DialogResult = DialogResult.Cancel; Close(); };

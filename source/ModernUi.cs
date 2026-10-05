@@ -1,33 +1,71 @@
 using System;
 using System.Drawing;
 using System.Drawing.Drawing2D;
+using System.Runtime.InteropServices;
 using System.Windows.Forms;
 
 namespace SGFloatingTranslator
 {
+    // Keep classic GDI controls opaque: extending DWM glass through them causes
+    // black edges and damaged text. macOS uses native behind-window material;
+    // Windows uses a deterministic mist surface with native rounded chrome.
+    internal class GlassForm : Form
+    {
+        [DllImport("dwmapi.dll")]
+        private static extern int DwmSetWindowAttribute(IntPtr hwnd, int attribute, ref int value, int size);
+
+        protected override void OnHandleCreated(EventArgs e)
+        {
+            base.OnHandleCreated(e);
+            if (SystemInformation.HighContrast) return;
+            try
+            {
+                int rounded = 2;
+                DwmSetWindowAttribute(Handle, 33, ref rounded, sizeof(int));
+            }
+            catch (DllNotFoundException) { }
+            catch (EntryPointNotFoundException) { }
+            catch (System.Security.SecurityException) { }
+        }
+    }
+
+    internal static class UiAccessibility
+    {
+        [DllImport("user32.dll", SetLastError = true)]
+        private static extern bool SystemParametersInfo(uint action, uint param, out bool value, uint flags);
+        internal static bool Animate
+        {
+            get
+            {
+                bool enabled;
+                return !SystemInformation.HighContrast &&
+                    SystemParametersInfo(0x1042, 0, out enabled, 0) && enabled;
+            }
+        }
+    }
+
+    // Mist / sage: shared semantic colors for all native windows.
     internal static class UiPalette
     {
-        internal static readonly Color Ink = Color.FromArgb(30, 38, 54);
-        internal static readonly Color Muted = Color.FromArgb(104, 114, 134);
-        internal static readonly Color Surface = Color.FromArgb(250, 251, 255);
-        internal static readonly Color Card = Color.FromArgb(255, 255, 255);
-        internal static readonly Color Border = Color.FromArgb(224, 230, 241);
-        internal static readonly Color Teal = Color.FromArgb(18, 138, 125);
-        internal static readonly Color TealDark = Color.FromArgb(11, 88, 83);
-        internal static readonly Color Blue = Color.FromArgb(82, 132, 221);
-        internal static readonly Color Violet = Color.FromArgb(109, 88, 212);
-        internal static readonly Color Coral = Color.FromArgb(240, 118, 96);
-        internal static readonly Color Mint = Color.FromArgb(223, 247, 241);
-        internal static readonly Color Lavender = Color.FromArgb(238, 234, 255);
+        internal static readonly Color Ink = Color.FromArgb(35, 55, 50);
+        internal static readonly Color Muted = Color.FromArgb(96, 116, 109);
+        internal static readonly Color Surface = Color.FromArgb(237, 244, 240);
+        internal static readonly Color Card = Color.FromArgb(251, 253, 252);
+        internal static readonly Color Border = Color.FromArgb(214, 227, 219);
+        internal static readonly Color Teal = Color.FromArgb(58, 113, 91);
+        internal static readonly Color TealDark = Color.FromArgb(43, 86, 70);
+        internal static readonly Color Blue = Color.FromArgb(74, 111, 119);
+        internal static readonly Color Violet = Color.FromArgb(75, 105, 96);
+        internal static readonly Color Coral = Color.FromArgb(165, 76, 68);
+        internal static readonly Color Mint = Color.FromArgb(228, 239, 232);
+        internal static readonly Color Lavender = Color.FromArgb(236, 241, 239);
     }
 
     internal static class DpiLayout
     {
         /// <summary>
-        /// Classic .NET Framework auto-scaling resizes controls and fonts but NEVER
-        /// scales TableLayoutPanel absolute row/column sizes, so at 125%/150% display
-        /// scaling fixed cells stay small and clip their scaled content (the cropped
-        /// logo and cut-off text). Walk the tree once and scale those styles manually.
+        /// For manually sized dialogs only. Do not also call Control.Scale on the
+        /// same tree: it already scales absolute table styles on this runtime.
         /// </summary>
         internal static void ScaleTableStyles(Control parent, float factor)
         {
@@ -177,11 +215,11 @@ namespace SGFloatingTranslator
         internal ModernButton()
         {
             startColor = UiPalette.Teal;
-            endColor = UiPalette.Violet;
+            endColor = UiPalette.Teal;
             borderColor = Color.Transparent;
             cornerRadius = 11;
             ForeColor = Color.White;
-            Font = new Font("Microsoft YaHei UI", 9.5F, FontStyle.Bold);
+            Font = new Font("Microsoft YaHei UI", 9.5F, FontStyle.Regular);
             FlatStyle = FlatStyle.Flat;
             FlatAppearance.BorderSize = 0;
             FlatAppearance.MouseOverBackColor = Color.Transparent;
@@ -206,8 +244,8 @@ namespace SGFloatingTranslator
         {
             eventArgs.Graphics.SmoothingMode = SmoothingMode.AntiAlias;
             Rectangle bounds = new Rectangle(0, 0, Math.Max(1, Width - 1), Math.Max(1, Height - 1));
-            Color first = pressed ? ControlPaint.Dark(startColor, 0.10F) : (hovered ? ControlPaint.Light(startColor, 0.10F) : startColor);
-            Color second = pressed ? ControlPaint.Dark(endColor, 0.10F) : (hovered ? ControlPaint.Light(endColor, 0.10F) : endColor);
+            Color first = !Enabled ? UiPalette.Lavender : pressed ? ControlPaint.Dark(startColor, 0.10F) : (hovered ? ControlPaint.Light(startColor, 0.10F) : startColor);
+            Color second = !Enabled ? UiPalette.Lavender : pressed ? ControlPaint.Dark(endColor, 0.10F) : (hovered ? ControlPaint.Light(endColor, 0.10F) : endColor);
             using (GraphicsPath path = RoundedGeometry.Create(bounds, ScaleLogical(cornerRadius)))
             using (LinearGradientBrush brush = new LinearGradientBrush(bounds, first, second, 18F))
             {
@@ -223,7 +261,7 @@ namespace SGFloatingTranslator
                 Text,
                 Font,
                 bounds,
-                Enabled ? ForeColor : Color.FromArgb(165, ForeColor),
+                Enabled ? ForeColor : UiPalette.Muted,
                 TextFormatFlags.HorizontalCenter | TextFormatFlags.VerticalCenter |
                 TextFormatFlags.EndEllipsis | TextFormatFlags.NoPadding);
             if (Focused && ShowFocusCues)
@@ -264,7 +302,7 @@ namespace SGFloatingTranslator
             FlatAppearance.MouseOverBackColor = Color.Transparent;
             FlatAppearance.MouseDownBackColor = Color.Transparent;
             Cursor = Cursors.Hand;
-            Font = new Font("Microsoft YaHei UI", 9F, FontStyle.Bold);
+            Font = new Font("Microsoft YaHei UI", 9F, FontStyle.Regular);
             UseVisualStyleBackColor = false;
             SetStyle(ControlStyles.AllPaintingInWmPaint |
                      ControlStyles.OptimizedDoubleBuffer |
@@ -279,21 +317,24 @@ namespace SGFloatingTranslator
         {
             eventArgs.Graphics.SmoothingMode = SmoothingMode.AntiAlias;
             Rectangle bounds = new Rectangle(0, 0, Math.Max(1, Width - 1), Math.Max(1, Height - 1));
-            Color start = Checked ? UiPalette.Teal : Color.FromArgb(236, 239, 247);
-            Color end = Checked ? UiPalette.Blue : Color.FromArgb(246, 247, 251);
-            Color textColor = Checked ? Color.White : UiPalette.Muted;
+            Color start = Checked ? UiPalette.Mint : UiPalette.Card;
+            Color end = start;
+            Color textColor = Checked ? UiPalette.TealDark : UiPalette.Muted;
             using (GraphicsPath path = RoundedGeometry.Create(bounds, Math.Max(4, Height / 2 - 1)))
             using (LinearGradientBrush brush = new LinearGradientBrush(bounds, start, end, 12F))
             {
                 eventArgs.Graphics.FillPath(brush, path);
                 using (Pen pen = new Pen(
-                    Checked ? Color.Transparent : UiPalette.Border,
+                    Checked ? Color.FromArgb(168, 199, 183) : UiPalette.Border,
                     Math.Max(1F, DeviceDpi / 96F)))
                     eventArgs.Graphics.DrawPath(pen, path);
             }
             TextRenderer.DrawText(eventArgs.Graphics, Text, Font, bounds, textColor,
                 TextFormatFlags.HorizontalCenter | TextFormatFlags.VerticalCenter |
                 TextFormatFlags.EndEllipsis | TextFormatFlags.NoPadding);
+            if (Focused && ShowFocusCues)
+                ControlPaint.DrawFocusRectangle(eventArgs.Graphics,
+                    Rectangle.Inflate(bounds, -5, -5), UiPalette.TealDark, BackColor);
         }
 
         public override Size GetPreferredSize(Size proposedSize)

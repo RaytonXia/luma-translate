@@ -1,19 +1,60 @@
 import AppKit
 import SwiftUI
 
+// Adaptive mist-and-sage tokens; native materials provide the translucency.
 enum LumaPalette {
-    static let ink = Color(red: 0.075, green: 0.086, blue: 0.14)
-    static let violet = Color(red: 0.45, green: 0.34, blue: 1.0)
-    static let cyan = Color(red: 0.29, green: 0.84, blue: 0.91)
-    static let paper = Color(red: 0.97, green: 0.975, blue: 0.99)
-    static let slate = Color(red: 0.38, green: 0.40, blue: 0.49)
-    static let coral = Color(red: 0.95, green: 0.45, blue: 0.45)
-    static let success = Color(red: 0.18, green: 0.70, blue: 0.53)
+    static let ink = Color.primary
+    static let slate = Color.secondary
+    static let violet = Color(nsColor: NSColor(name: nil) { appearance in
+        appearance.bestMatch(from: [.darkAqua, .aqua]) == .darkAqua
+            ? NSColor(calibratedRed: 0.62, green: 0.80, blue: 0.70, alpha: 1)
+            : NSColor(calibratedRed: 0.23, green: 0.44, blue: 0.36, alpha: 1)
+    })
+    static let cyan = violet
+    static let paper = Color(nsColor: NSColor(name: nil) { appearance in
+        appearance.bestMatch(from: [.darkAqua, .aqua]) == .darkAqua
+            ? NSColor(calibratedRed: 0.12, green: 0.17, blue: 0.15, alpha: 1)
+            : NSColor(calibratedRed: 0.93, green: 0.96, blue: 0.94, alpha: 1)
+    })
+    static let coral = Color(nsColor: .systemRed)
+    static let success = violet
     static let orbitGradient = LinearGradient(
-        colors: [cyan, Color(red: 0.35, green: 0.61, blue: 1.0), violet],
+        colors: [violet.opacity(0.85), violet],
         startPoint: .topLeading,
         endPoint: .bottomTrailing
     )
+}
+
+/// Behind-window blur, with the user's Reduce Transparency setting respected.
+struct WindowGlass: NSViewRepresentable {
+    var isControlCenter = false
+    @Environment(\.accessibilityReduceTransparency) private var reduceTransparency
+
+    final class EffectView: NSVisualEffectView {
+        var isControlCenter = false
+        override func viewDidMoveToWindow() {
+            super.viewDidMoveToWindow()
+            window?.isOpaque = false
+            window?.backgroundColor = .clear
+            window?.titlebarAppearsTransparent = true
+            if isControlCenter {
+                AppModel.shared.controlCenterWindow = window
+                window?.isReleasedWhenClosed = false
+            }
+        }
+    }
+
+    func makeNSView(context: Context) -> EffectView {
+        let view = EffectView()
+        view.isControlCenter = isControlCenter
+        view.blendingMode = .behindWindow
+        view.state = .followsWindowActiveState
+        return view
+    }
+
+    func updateNSView(_ view: EffectView, context: Context) {
+        view.material = reduceTransparency ? .windowBackground : .underWindowBackground
+    }
 }
 
 private final class LumaPanel: NSPanel {
@@ -28,11 +69,11 @@ private final class SelectionBorderView: NSView {
         super.draw(dirtyRect)
         let bounds = self.bounds.insetBy(dx: 2.5, dy: 2.5)
         let path = NSBezierPath(roundedRect: bounds, xRadius: 9, yRadius: 9)
-        NSColor(calibratedRed: 0.45, green: 0.34, blue: 1.0, alpha: 0.12).setFill()
+        NSColor(calibratedRed: 0.23, green: 0.44, blue: 0.36, alpha: 0.12).setFill()
         path.fill()
         path.lineWidth = 2.5
         path.setLineDash([8, 5], count: 2, phase: 0)
-        NSColor(calibratedRed: 0.36, green: 0.72, blue: 1.0, alpha: 0.95).setStroke()
+        NSColor(calibratedRed: 0.23, green: 0.44, blue: 0.36, alpha: 0.95).setStroke()
         path.stroke()
     }
 }
@@ -89,7 +130,7 @@ private struct CursorOrbView: View {
                         : AnyShapeStyle(LumaPalette.orbitGradient)
                 )
                 .frame(width: state == .awaitingSecondClick ? 13 : 10, height: state == .awaitingSecondClick ? 13 : 10)
-                .shadow(color: LumaPalette.cyan.opacity(0.55), radius: 5)
+                .shadow(color: LumaPalette.cyan.opacity(0.16), radius: 3)
             if state == .selecting {
                 Image(systemName: "sparkles")
                     .font(.system(size: 9, weight: .bold))
@@ -174,7 +215,7 @@ private struct PopupSection: View {
         if !text.isEmpty {
             VStack(alignment: .leading, spacing: 5) {
                 Text(eyebrow.uppercased())
-                    .font(.system(size: 10, weight: .bold, design: .rounded))
+                    .font(.system(size: 10, weight: .medium))
                     .tracking(1.1)
                     .foregroundStyle(LumaPalette.violet)
                 Text(text)
@@ -214,7 +255,7 @@ private struct QuickPopupView: View {
 
                 VStack(alignment: .leading, spacing: 1) {
                     Text(result.speakText.isEmpty ? "Luma Translate" : result.speakText)
-                        .font(.system(size: 15, weight: .semibold, design: .rounded))
+                        .font(.system(size: 23, weight: .regular, design: .serif))
                         .lineLimit(2)
                     HStack(spacing: 5) {
                         if !result.phonetic.isEmpty { Text("/\(result.phonetic)/") }
@@ -225,7 +266,7 @@ private struct QuickPopupView: View {
                 }
                 Spacer(minLength: 8)
                 Button(action: onClose) {
-                    Image(systemName: "xmark")
+                    Image(systemName: "xmark").frame(width: 28, height: 28)
                 }
                 .buttonStyle(.plain)
                 .foregroundStyle(.secondary)
@@ -233,7 +274,7 @@ private struct QuickPopupView: View {
             }
             .padding(16)
 
-            Rectangle().fill(LumaPalette.orbitGradient).frame(height: 2)
+            Rectangle().fill(LumaPalette.violet.opacity(0.14)).frame(height: 1)
 
             ScrollView {
                 VStack(alignment: .leading, spacing: 15) {
@@ -272,8 +313,8 @@ private struct QuickPopupView: View {
             .font(.system(size: 12, weight: .medium))
             .padding(12)
         }
-        .frame(width: 430, height: 500)
-        .background(.regularMaterial)
+        .frame(width: 410, height: 460)
+        .background(WindowGlass())
         .clipShape(RoundedRectangle(cornerRadius: 18, style: .continuous))
         .overlay(
             RoundedRectangle(cornerRadius: 18, style: .continuous)
@@ -295,13 +336,13 @@ private struct MessagePopupView: View {
                 .font(.system(size: 13))
                 .fixedSize(horizontal: false, vertical: true)
             Spacer(minLength: 4)
-            Button(action: onClose) { Image(systemName: "xmark") }
+            Button(action: onClose) { Image(systemName: "xmark").frame(width: 28, height: 28) }
                 .buttonStyle(.plain)
                 .foregroundStyle(.secondary)
         }
         .padding(15)
         .frame(width: 370)
-        .background(.regularMaterial)
+        .background(WindowGlass())
         .clipShape(RoundedRectangle(cornerRadius: 15, style: .continuous))
         .overlay(
             RoundedRectangle(cornerRadius: 15, style: .continuous)
@@ -321,7 +362,7 @@ final class QuickPopupController {
 
     init() {
         panel = LumaPanel(
-            contentRect: NSRect(x: 0, y: 0, width: 430, height: 500),
+            contentRect: NSRect(x: 0, y: 0, width: 410, height: 460),
             styleMask: [.borderless, .nonactivatingPanel],
             backing: .buffered,
             defer: true
@@ -346,7 +387,7 @@ final class QuickPopupController {
         aiAction = onAI
         isBusy = false
         renderResult()
-        placeNearAnchor(size: CGSize(width: 430, height: 500))
+        placeNearAnchor(size: CGSize(width: 410, height: 460))
         panel.orderFrontRegardless()
     }
 

@@ -18,6 +18,11 @@ using System.Threading.Tasks;
 using System.Web.Script.Serialization;
 using System.Windows.Forms;
 
+[assembly: AssemblyTitle("Luma Translate")]
+[assembly: AssemblyProduct("Luma Translate")]
+[assembly: AssemblyVersion("1.1.0.0")]
+[assembly: AssemblyFileVersion("1.1.0.0")]
+
 namespace SGFloatingTranslator
 {
     internal static class Program
@@ -37,19 +42,19 @@ namespace SGFloatingTranslator
                         MessageBoxIcon.Information);
                     return;
                 }
-                RunApplication();
+                RunApplication(Array.Exists(args, delegate(string argument) { return argument == "--show"; }));
                 GC.KeepAlive(singleInstance);
             }
         }
 
-        private static void RunApplication()
+        private static void RunApplication(bool showOnLaunch)
         {
             DpiAwareness.EnablePerMonitorV2();
             Application.EnableVisualStyles();
             Application.SetCompatibleTextRenderingDefault(false);
             try
             {
-                Application.Run(new FloatingTranslatorForm());
+                Application.Run(new FloatingTranslatorForm(false, showOnLaunch));
             }
             catch (TranslatorException ex)
             {
@@ -1294,7 +1299,7 @@ namespace SGFloatingTranslator
         }
     }
 
-    internal sealed class FloatingTranslatorForm : Form
+    internal sealed class FloatingTranslatorForm : GlassForm
     {
         private readonly OfflineDictionaryTranslator offlineTranslator;
         private GeminiTranslator geminiTranslator;
@@ -1351,19 +1356,24 @@ namespace SGFloatingTranslator
         // checks. It builds the real controls, but does not create a tray icon,
         // initialise speech, or install the global mouse hook.
         internal FloatingTranslatorForm(bool uiPreviewMode)
+            : this(uiPreviewMode, false)
+        {
+        }
+
+        internal FloatingTranslatorForm(bool uiPreviewMode, bool showOnLaunch)
         {
             offlineTranslator = new OfflineDictionaryTranslator();
             cache = new Dictionary<string, TranslationResult>();
             cacheOrder = new Queue<string>();
             currentProvider = "offline";
 
-            Text = "鼠标点读英汉翻译 / Click-to-Translate EN→ZH";
+            Text = "Luma Translate";
             Font = new Font("Microsoft YaHei UI", 10.5F);
             StartPosition = FormStartPosition.CenterScreen;
             AutoScaleDimensions = new SizeF(96F, 96F);
-            AutoScaleMode = AutoScaleMode.Dpi;
-            ClientSize = new Size(744, 646);
-            MinimumSize = new Size(660, 600);
+            AutoScaleMode = AutoScaleMode.None;
+            ClientSize = new Size(760, 700);
+            MinimumSize = new Size(700, 660);
             FormBorderStyle = FormBorderStyle.None;
             ShowInTaskbar = false;
             TopMost = false;
@@ -1372,7 +1382,13 @@ namespace SGFloatingTranslator
             DoubleBuffered = true;
 
             BuildInterface();
-            DpiLayout.ScaleTableStyles(this, DpiLayout.ScreenScaleFactor(this));
+            // Scale geometry once, including TableLayoutPanel styles. Font points
+            // already follow display DPI; a second table-style pass would clip rows.
+            float initialScale = DpiLayout.ScreenScaleFactor(this);
+            Scale(new SizeF(initialScale, initialScale));
+            Rectangle workArea = Screen.FromControl(this).WorkingArea;
+            ClientSize = new Size(Math.Min(Width, workArea.Width - 40),
+                Math.Min(Height, workArea.Height - 40));
             if (uiPreviewMode)
             {
                 using (Icon previewIcon = CreateTrayIcon())
@@ -1391,7 +1407,7 @@ namespace SGFloatingTranslator
             {
                 InitializeTranslationMouse();
                 UpdateReadyStatus();
-                if (mouseController != null && mouseController.Enabled)
+                if (mouseController != null && mouseController.Enabled && !showOnLaunch)
                 {
                     // Hide before restoring opacity so the tray-first launch never
                     // flashes a fully opaque window for one frame.
@@ -1434,27 +1450,28 @@ namespace SGFloatingTranslator
 
         private void BuildInterface()
         {
-            BackColor = Color.FromArgb(237, 241, 248);
+            BackColor = UiPalette.Border;
             Padding = new Padding(1);
 
             ModernGradientPanel canvas = new ModernGradientPanel();
             canvas.Dock = DockStyle.Fill;
             canvas.CornerRadius = 24;
-            canvas.StartColor = Color.FromArgb(249, 252, 253);
-            canvas.EndColor = Color.FromArgb(243, 240, 253);
+            canvas.StartColor = Color.FromArgb(246, 250, 247);
+            canvas.EndColor = Color.FromArgb(225, 237, 231);
             canvas.GradientAngle = 24F;
-            canvas.Padding = new Padding(16);
+            canvas.Padding = new Padding(22, 16, 22, 14);
             Controls.Add(canvas);
 
             TableLayoutPanel root = new TableLayoutPanel();
             root.Dock = DockStyle.Fill;
             root.BackColor = Color.Transparent;
             root.ColumnCount = 1;
+            root.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 100));
             root.RowCount = 7;
             root.GrowStyle = TableLayoutPanelGrowStyle.FixedSize;
-            root.RowStyles.Add(new RowStyle(SizeType.Absolute, 106));
+            root.RowStyles.Add(new RowStyle(SizeType.Absolute, 110));
             root.RowStyles.Add(new RowStyle(SizeType.Absolute, 5));
-            root.RowStyles.Add(new RowStyle(SizeType.Absolute, 150));
+            root.RowStyles.Add(new RowStyle(SizeType.Absolute, 172));
             root.RowStyles.Add(new RowStyle(SizeType.Absolute, 10));
             root.RowStyles.Add(new RowStyle(SizeType.Percent, 100));
             root.RowStyles.Add(new RowStyle(SizeType.Absolute, 10));
@@ -1464,10 +1481,10 @@ namespace SGFloatingTranslator
             ModernGradientPanel header = new ModernGradientPanel();
             header.Dock = DockStyle.Fill;
             header.CornerRadius = 18;
-            header.StartColor = Color.FromArgb(16, 106, 103);
-            header.EndColor = Color.FromArgb(90, 79, 197);
+            header.StartColor = Color.FromArgb(247, 251, 248);
+            header.EndColor = Color.FromArgb(235, 244, 237);
             header.GradientAngle = 18F;
-            header.Padding = new Padding(18, 10, 14, 8);
+            header.Padding = new Padding(4, 8, 4, 8);
             root.Controls.Add(header, 0, 0);
             WireDragSurface(header);
 
@@ -1497,14 +1514,14 @@ namespace SGFloatingTranslator
 
             ModernGradientPanel logoTile = new ModernGradientPanel();
             logoTile.Anchor = AnchorStyles.Left;
-            logoTile.Size = new Size(44, 44);
-            logoTile.MinimumSize = new Size(44, 44);
+            logoTile.Size = new Size(46, 46);
+            logoTile.MinimumSize = new Size(46, 46);
             logoTile.Margin = new Padding(0, 0, 10, 0);
             logoTile.Padding = new Padding(6);
             logoTile.CornerRadius = 13;
-            logoTile.StartColor = Color.FromArgb(250, 255, 255);
-            logoTile.EndColor = Color.FromArgb(231, 245, 243);
-            logoTile.BorderColor = Color.FromArgb(214, 243, 239);
+            logoTile.StartColor = UiPalette.Card;
+            logoTile.EndColor = UiPalette.Card;
+            logoTile.BorderColor = UiPalette.Border;
             brandLogoBox = new PictureBox();
             brandLogoBox.Dock = DockStyle.Fill;
             brandLogoBox.BackColor = Color.Transparent;
@@ -1523,16 +1540,16 @@ namespace SGFloatingTranslator
             Label title = new Label();
             title.Dock = DockStyle.Fill;
             title.Text = "Luma Translate";
-            title.Font = new Font("Segoe UI", 15F, FontStyle.Bold);
-            title.ForeColor = Color.White;
+            title.Font = new Font("Segoe UI", 17F, FontStyle.Regular);
+            title.ForeColor = UiPalette.Ink;
             title.TextAlign = ContentAlignment.MiddleLeft;
             title.AutoEllipsis = true;
             title.Margin = Padding.Empty;
             directionLabel = new Label();
             directionLabel.Dock = DockStyle.Fill;
-            directionLabel.Text = "右键双击取词  ·  长按拖拽 AI 长句";
+            directionLabel.Text = "随手点译，轻松读懂。";
             directionLabel.Font = new Font("Microsoft YaHei UI", 9F, FontStyle.Regular);
-            directionLabel.ForeColor = Color.FromArgb(224, 245, 243);
+            directionLabel.ForeColor = UiPalette.Muted;
             directionLabel.TextAlign = ContentAlignment.MiddleLeft;
             directionLabel.AutoEllipsis = true;
             directionLabel.Margin = Padding.Empty;
@@ -1545,7 +1562,7 @@ namespace SGFloatingTranslator
             statusLabel.Dock = DockStyle.Fill;
             statusLabel.Text = "正在准备本地 OCR…";
             statusLabel.Font = new Font("Microsoft YaHei UI", 8.5F, FontStyle.Regular);
-            statusLabel.ForeColor = Color.FromArgb(222, 218, 249);
+            statusLabel.ForeColor = UiPalette.Teal;
             statusLabel.TextAlign = ContentAlignment.MiddleLeft;
             statusLabel.AutoEllipsis = true;
             statusLabel.Margin = Padding.Empty;
@@ -1562,7 +1579,7 @@ namespace SGFloatingTranslator
 
             mouseModeButton = new ModernPillToggle();
             mouseModeButton.Checked = true;
-            mouseModeButton.Text = "手势 ON";
+            mouseModeButton.Text = "取词已开启";
             mouseModeButton.AutoSize = true;
             mouseModeButton.MinimumSize = new Size(92, 34);
             mouseModeButton.Margin = new Padding(8, 0, 8, 0);
@@ -1580,10 +1597,10 @@ namespace SGFloatingTranslator
             headerActions.WrapContents = false;
             headerActions.BackColor = Color.Transparent;
             headerActions.Margin = Padding.Empty;
-            ModernButton settingsButton = MakeModernButton("AI 设置", "配置 DeepSeek 或 Gemini API", UiPalette.Blue, UiPalette.Violet, Color.White);
+            ModernButton settingsButton = MakeModernButton("AI 设置", "配置 DeepSeek 或 Gemini API", UiPalette.Card, UiPalette.Card, UiPalette.Ink);
             settingsButton.MinimumSize = new Size(88, 34);
             settingsButton.Click += delegate { ShowApiKeyDialog(); };
-            hideButton = MakeModernButton("隐藏", "隐藏窗口并继续在后台运行", Color.FromArgb(246, 255, 253), Color.FromArgb(238, 239, 253), UiPalette.TealDark);
+            hideButton = MakeModernButton("隐藏", "隐藏窗口并继续在后台运行", UiPalette.Card, UiPalette.Card, UiPalette.Muted);
             hideButton.MinimumSize = new Size(64, 34);
             hideButton.Click += delegate { HideMainWindow(); };
             headerActions.Controls.Add(mouseModeButton);
@@ -1601,34 +1618,36 @@ namespace SGFloatingTranslator
             ModernGradientPanel inputCard = new ModernGradientPanel();
             inputCard.Dock = DockStyle.Fill;
             inputCard.CornerRadius = 16;
-            inputCard.StartColor = Color.FromArgb(255, 255, 255);
-            inputCard.EndColor = Color.FromArgb(249, 253, 252);
+            inputCard.StartColor = UiPalette.Card;
+            inputCard.EndColor = UiPalette.Card;
             inputCard.BorderColor = UiPalette.Border;
-            inputCard.Padding = new Padding(16, 11, 16, 11);
+            inputCard.Padding = new Padding(20, 14, 20, 14);
             root.Controls.Add(inputCard, 0, 2);
 
             TableLayoutPanel inputLayout = new TableLayoutPanel();
             inputLayout.Dock = DockStyle.Fill;
             inputLayout.BackColor = Color.Transparent;
             inputLayout.RowCount = 3;
+            inputLayout.ColumnCount = 1;
+            inputLayout.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 100));
             inputLayout.RowStyles.Add(new RowStyle(SizeType.Absolute, 26));
             inputLayout.RowStyles.Add(new RowStyle(SizeType.Percent, 100));
             inputLayout.RowStyles.Add(new RowStyle(SizeType.AutoSize));
             inputCard.Controls.Add(inputLayout);
             Label inputTitle = new Label();
             inputTitle.Dock = DockStyle.Fill;
-            inputTitle.Text = "输入英文，或在屏幕上右键双击取词";
-            inputTitle.Font = new Font("Microsoft YaHei UI", 10F, FontStyle.Bold);
-            inputTitle.ForeColor = UiPalette.Ink;
+            inputTitle.Text = "英文原文   /   ENGLISH";
+            inputTitle.Font = new Font("Microsoft YaHei UI", 9F, FontStyle.Regular);
+            inputTitle.ForeColor = UiPalette.Muted;
             inputTitle.AutoEllipsis = true;
             inputLayout.Controls.Add(inputTitle, 0, 0);
             sourceBox = new TextBox();
             sourceBox.Dock = DockStyle.Fill;
             sourceBox.Multiline = true;
             sourceBox.BorderStyle = BorderStyle.None;
-            sourceBox.BackColor = Color.FromArgb(247, 249, 253);
+            sourceBox.BackColor = UiPalette.Card;
             sourceBox.ForeColor = UiPalette.Ink;
-            sourceBox.Font = new Font("Segoe UI", 11.5F, FontStyle.Regular);
+            sourceBox.Font = new Font("Segoe UI", 14F, FontStyle.Regular);
             sourceBox.Margin = new Padding(2, 3, 2, 5);
             sourceBox.AccessibleName = "英文原文 English source text";
             sourceBox.KeyDown += delegate(object sender, KeyEventArgs e)
@@ -1646,12 +1665,12 @@ namespace SGFloatingTranslator
             inputActions.AutoSizeMode = AutoSizeMode.GrowAndShrink;
             inputActions.WrapContents = true;
             inputActions.BackColor = Color.Transparent;
-            ModernButton translateButton = MakeModernButton("本地查询", "使用本地词典查询", UiPalette.Teal, UiPalette.TealDark, Color.White);
+            ModernButton translateButton = MakeModernButton("离线查词", "使用本地词典查询 · Ctrl+Enter", UiPalette.Teal, UiPalette.Teal, Color.White);
             translateButton.Click += delegate { TranslateManualText(); };
-            ModernButton clipboardButton = MakeModernButton("剪贴板", "本地查询剪贴板英文", Color.FromArgb(231, 246, 242), Color.FromArgb(235, 231, 252), UiPalette.TealDark);
+            ModernButton clipboardButton = MakeModernButton("粘贴查询", "本地查询剪贴板英文", UiPalette.Card, UiPalette.Card, UiPalette.Ink);
             clipboardButton.BorderColor = UiPalette.Border;
             clipboardButton.Click += delegate { TranslateClipboardText(); };
-            ModernButton aiButton = MakeModernButton("✦ AI 用法", "使用已选择的 DeepSeek 或 Gemini 补充真实生活用法", UiPalette.Violet, Color.FromArgb(210, 91, 153), Color.White);
+            ModernButton aiButton = MakeModernButton("AI 用法", "使用已选择的 DeepSeek 或 Gemini 补充真实生活用法", UiPalette.Mint, UiPalette.Mint, UiPalette.TealDark);
             aiButton.Click += delegate { TranslateCurrentWithAi(); };
             inputActions.Controls.Add(translateButton);
             inputActions.Controls.Add(clipboardButton);
@@ -1661,16 +1680,18 @@ namespace SGFloatingTranslator
             ModernGradientPanel resultCard = new ModernGradientPanel();
             resultCard.Dock = DockStyle.Fill;
             resultCard.CornerRadius = 16;
-            resultCard.StartColor = Color.White;
-            resultCard.EndColor = Color.FromArgb(250, 249, 255);
+            resultCard.StartColor = UiPalette.Card;
+            resultCard.EndColor = UiPalette.Card;
             resultCard.BorderColor = UiPalette.Border;
-            resultCard.Padding = new Padding(16, 11, 16, 11);
+            resultCard.Padding = new Padding(20, 14, 20, 14);
             root.Controls.Add(resultCard, 0, 4);
 
             TableLayoutPanel resultLayout = new TableLayoutPanel();
             resultLayout.Dock = DockStyle.Fill;
             resultLayout.BackColor = Color.Transparent;
             resultLayout.RowCount = 5;
+            resultLayout.ColumnCount = 1;
+            resultLayout.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 100));
             resultLayout.RowStyles.Add(new RowStyle(SizeType.Absolute, 26));
             resultLayout.RowStyles.Add(new RowStyle(SizeType.Absolute, 72));
             resultLayout.RowStyles.Add(new RowStyle(SizeType.Percent, 100));
@@ -1679,31 +1700,31 @@ namespace SGFloatingTranslator
             resultCard.Controls.Add(resultLayout);
             Label resultTitle = new Label();
             resultTitle.Dock = DockStyle.Fill;
-            resultTitle.Text = "释义 · 英文解释 · 实际用法";
-            resultTitle.Font = new Font("Microsoft YaHei UI", 10F, FontStyle.Bold);
-            resultTitle.ForeColor = UiPalette.Ink;
+            resultTitle.Text = "中文释义   /   TRANSLATION";
+            resultTitle.Font = new Font("Microsoft YaHei UI", 9F, FontStyle.Regular);
+            resultTitle.ForeColor = UiPalette.Muted;
             resultTitle.AutoEllipsis = true;
             resultLayout.Controls.Add(resultTitle, 0, 0);
             translationBox = new RichTextBox();
             translationBox.Dock = DockStyle.Fill;
             translationBox.ReadOnly = true;
             translationBox.BorderStyle = BorderStyle.None;
-            translationBox.BackColor = Color.FromArgb(238, 250, 246);
+            translationBox.BackColor = UiPalette.Card;
             translationBox.ForeColor = UiPalette.TealDark;
             // Big bold type is reserved for real translations; the idle hint and error
             // messages use a calm small face so they never dominate the window.
-            translationResultFont = new Font("Microsoft YaHei UI", 13F, FontStyle.Bold);
+            translationResultFont = new Font("Microsoft YaHei UI", 16F, FontStyle.Regular);
             translationIdleFont = new Font("Microsoft YaHei UI", 9.5F, FontStyle.Regular);
             translationBox.Font = translationIdleFont;
             translationBox.ScrollBars = RichTextBoxScrollBars.Vertical;
-            translationBox.Text = "手势已就绪：在英文上右键双击取词";
+            translationBox.Text = "从一个英文单词开始。";
             translationBox.AccessibleName = "中文释义 Chinese translation";
             resultLayout.Controls.Add(translationBox, 0, 1);
             detailsBox = new RichTextBox();
             detailsBox.Dock = DockStyle.Fill;
             detailsBox.ReadOnly = true;
             detailsBox.BorderStyle = BorderStyle.None;
-            detailsBox.BackColor = Color.FromArgb(252, 251, 255);
+            detailsBox.BackColor = UiPalette.Card;
             detailsBox.ForeColor = UiPalette.Muted;
             detailsBox.Font = new Font("Microsoft YaHei UI", 9.6F, FontStyle.Regular);
             detailsBox.ScrollBars = RichTextBoxScrollBars.Vertical;
@@ -1716,23 +1737,23 @@ namespace SGFloatingTranslator
             resultActions.AutoSizeMode = AutoSizeMode.GrowAndShrink;
             resultActions.WrapContents = true;
             resultActions.BackColor = Color.Transparent;
-            speakButton = MakeModernButton("▶ 发音", "朗读英文", UiPalette.Teal, UiPalette.TealDark, Color.White);
+            speakButton = MakeModernButton("朗读", "朗读英文", UiPalette.Mint, UiPalette.Mint, UiPalette.TealDark);
             speakButton.Click += delegate { SpeakMainText(); };
-            explainButton = MakeModernButton("▶ 听解释", "朗读英文解释", Color.FromArgb(234, 230, 251), Color.FromArgb(226, 241, 247), UiPalette.Violet);
+            explainButton = MakeModernButton("听解释", "朗读英文解释", UiPalette.Card, UiPalette.Card, UiPalette.Ink);
             ((ModernButton)explainButton).BorderColor = UiPalette.Border;
             explainButton.Click += delegate { SpeakExplanation(); };
             slowButton = new ModernPillToggle();
-            slowButton.Text = "慢速 OFF";
+            slowButton.Text = "慢速：关";
             slowButton.AutoSize = true;
             slowButton.MinimumSize = new Size(88, 34);
             slowButton.Margin = new Padding(4, 2, 4, 2);
             slowButton.AccessibleName = "慢速朗读 Slow speech";
             slowButton.CheckedChanged += delegate
             {
-                slowButton.Text = slowButton.Checked ? "慢速 ON" : "慢速 OFF";
+                slowButton.Text = slowButton.Checked ? "慢速：开" : "慢速：关";
                 statusLabel.Text = slowButton.Checked ? "朗读速度：慢速" : "朗读速度：正常";
             };
-            ModernButton copyButton = MakeModernButton("复制", "复制中文释义", Color.FromArgb(245, 242, 253), Color.FromArgb(237, 247, 244), UiPalette.Ink);
+            ModernButton copyButton = MakeModernButton("复制", "复制中文释义", UiPalette.Card, UiPalette.Card, UiPalette.Ink);
             copyButton.BorderColor = UiPalette.Border;
             copyButton.Click += delegate { CopyTranslation(); };
             resultActions.Controls.Add(speakButton);
@@ -1760,7 +1781,7 @@ namespace SGFloatingTranslator
             voiceBox.FlatStyle = FlatStyle.Flat;
             voiceBox.Font = new Font("Microsoft YaHei UI", 8.5F);
             voiceBox.ForeColor = UiPalette.Ink;
-            voiceBox.BackColor = Color.FromArgb(244, 248, 250);
+            voiceBox.BackColor = UiPalette.Surface;
             voiceBox.Margin = new Padding(0, 2, 0, 2);
             voiceBox.AccessibleName = "选择 Windows 本地英语语音 Select local English voice";
             voiceBox.SelectedIndexChanged += VoiceSelectionChanged;
@@ -1789,12 +1810,12 @@ namespace SGFloatingTranslator
             privacyLabel.Dock = DockStyle.Fill;
             privacyLabel.Text = "● 本地 OCR + 词典  ·  截图不保存  ·  AI 需主动开启";
             privacyLabel.ForeColor = UiPalette.TealDark;
-            privacyLabel.Font = new Font("Microsoft YaHei UI", 8.5F, FontStyle.Bold);
+            privacyLabel.Font = new Font("Microsoft YaHei UI", 8.5F, FontStyle.Regular);
             privacyLabel.TextAlign = ContentAlignment.MiddleLeft;
             privacyLabel.AutoEllipsis = true;
             footer.Controls.Add(privacyLabel, 0, 0);
-            ModernButton exitButton = MakeModernButton("退出", "完全退出应用", Color.FromArgb(248, 226, 225), Color.FromArgb(245, 235, 247), Color.FromArgb(146, 55, 64));
-            exitButton.BorderColor = Color.FromArgb(236, 205, 210);
+            ModernButton exitButton = MakeModernButton("退出", "完全退出应用", UiPalette.Card, UiPalette.Card, UiPalette.Muted);
+            exitButton.BorderColor = UiPalette.Border;
             exitButton.Dock = DockStyle.Fill;
             exitButton.Click += delegate { ExitApplication(); };
             footer.Controls.Add(exitButton, 1, 0);
@@ -1808,6 +1829,7 @@ namespace SGFloatingTranslator
             button.AccessibleName = accessibleName;
             button.StartColor = start;
             button.EndColor = end;
+            button.BorderColor = start == UiPalette.Teal ? Color.Transparent : UiPalette.Border;
             button.ForeColor = foreground;
             button.AutoSize = true;
             button.AutoSizeMode = AutoSizeMode.GrowAndShrink;
@@ -1837,7 +1859,7 @@ namespace SGFloatingTranslator
             exitItem.Click += delegate { ExitApplication(); };
             ContextMenuStrip menu = new ContextMenuStrip();
             menu.Font = new Font("Microsoft YaHei UI", 9.5F);
-            menu.BackColor = Color.FromArgb(250, 251, 255);
+            menu.BackColor = UiPalette.Card;
             menu.ForeColor = UiPalette.Ink;
             menu.Items.Add(trayMouseItem);
             menu.Items.Add(showItem);
@@ -2173,7 +2195,7 @@ namespace SGFloatingTranslator
             if (mouseModeButton != null)
             {
                 mouseModeButton.Checked = enabled;
-                mouseModeButton.Text = enabled ? "手势 ON" : "手势 OFF";
+                mouseModeButton.Text = enabled ? "取词已开启" : "取词已暂停";
             }
             updatingMouseModeUi = false;
             if (trayMouseItem != null)
@@ -3018,47 +3040,39 @@ namespace SGFloatingTranslator
 
             StringBuilder detail = new StringBuilder();
             if (!String.IsNullOrWhiteSpace(result.Phonetic))
-            {
-                detail.AppendLine("音标 Pronunciation");
-                detail.AppendLine(result.Phonetic);
-            }
+                detail.Append("/" + result.Phonetic.Trim('/') + "/  ");
             if (!String.IsNullOrWhiteSpace(result.PartOfSpeech))
-            {
-                if (detail.Length > 0) detail.AppendLine();
-                detail.AppendLine("词性 Part of speech");
-                detail.AppendLine(result.PartOfSpeech);
-            }
-            if (!String.IsNullOrWhiteSpace(result.MeaningZh))
-            {
-                if (detail.Length > 0) detail.AppendLine();
-                detail.AppendLine("中文释义 Meaning");
-                detail.AppendLine(result.MeaningZh);
-            }
+                detail.Append(result.PartOfSpeech);
+            if (detail.Length > 0) detail.AppendLine();
             if (!String.IsNullOrWhiteSpace(result.SimpleEnglish))
             {
-                if (detail.Length > 0) detail.AppendLine();
-                detail.AppendLine(result.Provider == "offline" ? "English dictionary explanation" : "Simple English explanation");
+                detail.AppendLine();
                 detail.AppendLine(result.SimpleEnglish);
             }
             if (!String.IsNullOrWhiteSpace(result.ExampleEn) || !String.IsNullOrWhiteSpace(result.ExampleZh))
             {
-                if (detail.Length > 0) detail.AppendLine();
-                detail.AppendLine("例句 Example");
+                detail.AppendLine();
+                detail.AppendLine("例句");
                 if (!String.IsNullOrWhiteSpace(result.ExampleEn)) detail.AppendLine(result.ExampleEn);
                 if (!String.IsNullOrWhiteSpace(result.ExampleZh)) detail.AppendLine(result.ExampleZh);
             }
             if (!String.IsNullOrWhiteSpace(result.PracticalUsageEn) || !String.IsNullOrWhiteSpace(result.PracticalUsageZh))
             {
-                if (detail.Length > 0) detail.AppendLine();
-                detail.AppendLine("实际生活用法 Real-life usage");
+                detail.AppendLine();
+                detail.AppendLine("日常用法");
                 if (!String.IsNullOrWhiteSpace(result.PracticalUsageEn)) detail.AppendLine(result.PracticalUsageEn);
                 if (!String.IsNullOrWhiteSpace(result.PracticalUsageZh)) detail.AppendLine(result.PracticalUsageZh);
             }
             if (!String.IsNullOrWhiteSpace(result.SingaporeNote))
             {
-                if (detail.Length > 0) detail.AppendLine();
-                detail.AppendLine("新加坡用法 Singapore usage");
+                detail.AppendLine();
+                detail.AppendLine("新加坡用法");
                 detail.AppendLine(result.SingaporeNote);
+            }
+            if (!String.IsNullOrWhiteSpace(result.MeaningZh))
+            {
+                detail.AppendLine();
+                detail.AppendLine(result.MeaningZh);
             }
             detailsBox.Text = detail.ToString().Trim();
             if (result.Provider == "gemini")

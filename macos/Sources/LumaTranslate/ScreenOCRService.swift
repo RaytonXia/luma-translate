@@ -189,7 +189,7 @@ final class ScreenOCRService: @unchecked Sendable {
         )
     }
 
-    private static func selectionText(in image: CGImage) throws -> String {
+    static func selectionText(in image: CGImage) throws -> String {
         let observations = try observations(in: image)
         let lines: [(text: String, box: CGRect)] = observations.compactMap { observation in
             guard let candidate = observation.topCandidates(1).first,

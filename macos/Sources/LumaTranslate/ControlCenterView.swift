@@ -10,12 +10,12 @@ private struct GlassCard<Content: View>: View {
 
     var body: some View {
         content
-            .padding(18)
-            .background(.thinMaterial)
+            .padding(20)
+            .background(.regularMaterial)
             .clipShape(RoundedRectangle(cornerRadius: 18, style: .continuous))
             .overlay(
                 RoundedRectangle(cornerRadius: 18, style: .continuous)
-                    .strokeBorder(Color.white.opacity(0.28), lineWidth: 1)
+                    .strokeBorder(LumaPalette.violet.opacity(0.10), lineWidth: 1)
             )
     }
 }
@@ -41,43 +41,23 @@ private struct LumaLogoView: View {
 private struct OrbitalStatusView: View {
     let state: GestureVisualState
     let enabled: Bool
-    @Environment(\.accessibilityReduceMotion) private var reduceMotion
 
     var body: some View {
-        TimelineView(.animation(minimumInterval: reduceMotion ? 2 : 1.0 / 30.0, paused: !enabled || reduceMotion)) { context in
-            let phase = context.date.timeIntervalSinceReferenceDate
-            ZStack {
-                Circle()
-                    .stroke(LumaPalette.cyan.opacity(0.16), lineWidth: 1)
-                    .frame(width: 88, height: 88)
-                Circle()
-                    .stroke(LumaPalette.violet.opacity(0.13), style: StrokeStyle(lineWidth: 1, dash: [4, 6]))
-                    .frame(width: 116, height: 116)
-                    .rotationEffect(.degrees(reduceMotion ? 0 : phase * 10))
-                Circle()
-                    .fill(enabled ? LumaPalette.orbitGradient : LinearGradient(colors: [.gray.opacity(0.45)], startPoint: .top, endPoint: .bottom))
-                    .frame(width: state == .processing ? 47 : 42, height: state == .processing ? 47 : 42)
-                    .shadow(color: enabled ? LumaPalette.cyan.opacity(0.42) : .clear, radius: 12)
-                    .overlay {
-                        Image(systemName: state == .selecting ? "selection.pin.in.out" : "cursorarrow.rays")
-                            .font(.system(size: 18, weight: .semibold))
-                            .foregroundStyle(.white)
-                    }
-                if enabled {
-                    Circle()
-                        .fill(LumaPalette.cyan)
-                        .frame(width: 9, height: 9)
-                        .offset(x: 44)
-                        .rotationEffect(.degrees(reduceMotion ? 0 : phase * 48))
-                    Circle()
-                        .fill(LumaPalette.violet)
-                        .frame(width: 7, height: 7)
-                        .offset(x: -58)
-                        .rotationEffect(.degrees(reduceMotion ? 180 : -phase * 31))
-                }
+        ZStack {
+            RoundedRectangle(cornerRadius: 22, style: .continuous)
+                .fill(LumaPalette.violet.opacity(0.09))
+                .overlay(RoundedRectangle(cornerRadius: 22).strokeBorder(LumaPalette.violet.opacity(0.12)))
+            if state == .processing {
+                ProgressView().controlSize(.regular)
+            } else {
+                Image(systemName: enabled ? "cursorarrow.rays" : "pause")
+                    .font(.system(size: 27, weight: .light))
+                    .foregroundStyle(LumaPalette.violet)
             }
-            .frame(width: 132, height: 132)
         }
+        .frame(width: 78, height: 78)
+        .padding(.vertical, 16)
+        .accessibilityLabel(enabled ? state.label : "取词已暂停")
     }
 }
 
@@ -94,7 +74,7 @@ private struct PermissionRow: View {
                 .font(.system(size: 16, weight: .semibold))
             VStack(alignment: .leading, spacing: 2) {
                 Text(title).font(.system(size: 12.5, weight: .semibold, design: .rounded))
-                Text(detail).font(.system(size: 10.5)).foregroundStyle(.secondary)
+                Text(detail).font(.system(size: 11.5)).foregroundStyle(.secondary)
             }
             Spacer(minLength: 4)
             if !granted {
@@ -114,8 +94,8 @@ private struct GestureRail: View {
                 OrbitalStatusView(state: model.gestureVisualState, enabled: model.gestureEnabled)
                 Text(model.gestureEnabled ? model.gestureVisualState.label : "手势已暂停")
                     .font(.system(size: 15, weight: .bold, design: .rounded))
-                Text(model.gestureEnabled ? "Luma 在鼠标旁待命" : "主窗口查询仍可使用")
-                    .font(.system(size: 10.5, weight: .medium, design: .monospaced))
+                Text(model.gestureEnabled ? "轻点两下，即刻读懂" : "仍可在右侧输入查询")
+                    .font(.system(size: 11.5))
                     .foregroundStyle(.secondary)
             }
             .frame(maxWidth: .infinity)
@@ -125,14 +105,14 @@ private struct GestureRail: View {
                     .frame(maxWidth: .infinity)
             }
             .buttonStyle(.borderedProminent)
-            .tint(model.gestureEnabled ? LumaPalette.slate : LumaPalette.violet)
+            .tint(LumaPalette.violet)
             .controlSize(.large)
 
             Divider()
 
             VStack(alignment: .leading, spacing: 13) {
-                Text("两项本机权限")
-                    .font(.system(size: 11, weight: .bold, design: .rounded))
+                Text("取词权限")
+                    .font(.system(size: 11, weight: .medium))
                     .tracking(0.5)
                     .foregroundStyle(.secondary)
                 PermissionRow(
@@ -159,13 +139,13 @@ private struct GestureRail: View {
             Spacer(minLength: 0)
 
             Label("截图不保存，也不上传", systemImage: "lock.shield.fill")
-                .font(.system(size: 10.5, weight: .semibold))
+                .font(.system(size: 11.5, weight: .medium))
                 .foregroundStyle(LumaPalette.success)
         }
         .padding(20)
-        .frame(width: 238)
-        .background(LumaPalette.ink.opacity(0.96))
-        .foregroundStyle(.white)
+        .frame(width: 218)
+        .background(LumaPalette.paper.opacity(0.28))
+        .foregroundStyle(.primary)
     }
 }
 
@@ -181,7 +161,7 @@ private struct GestureHint: View {
                 .foregroundStyle(LumaPalette.cyan)
             VStack(alignment: .leading, spacing: 2) {
                 Text(title).font(.system(size: 12, weight: .semibold, design: .rounded))
-                Text(detail).font(.system(size: 10.5)).foregroundStyle(.white.opacity(0.58))
+                Text(detail).font(.system(size: 11.5)).foregroundStyle(.secondary)
             }
         }
     }
@@ -216,12 +196,14 @@ private struct ResultCard: View {
                     Spacer()
                     Button(action: model.speakCurrent) { Image(systemName: "speaker.wave.2") }
                         .help("朗读英文")
+                        .accessibilityLabel("朗读英文")
                     Button(action: model.copyCurrentTranslation) { Image(systemName: "doc.on.doc") }
                         .help("复制中文")
+                        .accessibilityLabel("复制中文")
                 }
 
                 Text(result.translation)
-                    .font(.system(size: 23, weight: .semibold, design: .rounded))
+                    .font(.system(size: 23, weight: .medium))
                     .foregroundStyle(.primary)
                     .textSelection(.enabled)
 
@@ -239,7 +221,7 @@ private struct ResultCard: View {
                 }
 
                 Text(result.meaningZh)
-                    .font(.system(size: 10.5))
+                    .font(.system(size: 11.5))
                     .foregroundStyle(.secondary)
             }
         }
@@ -268,15 +250,17 @@ private struct ResultSection: View {
 
 struct ControlCenterView: View {
     @EnvironmentObject private var model: AppModel
+    @Environment(\.openWindow) private var openWindow
     @FocusState private var inputFocused: Bool
 
     var body: some View {
         HStack(spacing: 0) {
             GestureRail()
                 .environmentObject(model)
+            Rectangle().fill(LumaPalette.violet.opacity(0.10)).frame(width: 1)
 
             ZStack {
-                LumaPalette.paper.opacity(0.72).ignoresSafeArea()
+                LumaPalette.paper.opacity(0.18).ignoresSafeArea()
                 ScrollView {
                     VStack(alignment: .leading, spacing: 18) {
                         header
@@ -294,7 +278,9 @@ struct ControlCenterView: View {
                 }
             }
         }
-        .background(Color(nsColor: .windowBackgroundColor))
+        .background(WindowGlass(isControlCenter: true))
+        .tint(LumaPalette.violet)
+        .onAppear { model.reopenMainWindow = { openWindow(id: "control-center") } }
     }
 
     private var header: some View {
@@ -302,20 +288,28 @@ struct ControlCenterView: View {
             LumaLogoView(size: 46)
             VStack(alignment: .leading, spacing: 2) {
                 Text("Luma Translate")
-                    .font(.system(size: 25, weight: .bold, design: .rounded))
+                    .font(.system(size: 24, weight: .medium))
                     .foregroundStyle(LumaPalette.ink)
-                Text("英文停在眼前，中文就出现在手边。")
+                Text("随手点译，轻松读懂。")
                     .font(.system(size: 12.5))
                     .foregroundStyle(LumaPalette.slate)
             }
             Spacer()
-            Button {
-                NSApp.sendAction(Selector(("showSettingsWindow:")), to: nil, from: nil)
-            } label: {
-                Image(systemName: "gearshape")
+            if #available(macOS 14.0, *) {
+                SettingsLink { Image(systemName: "gearshape").frame(width: 24, height: 24) }
+                    .buttonStyle(.bordered)
+                    .help("设置")
+                    .accessibilityLabel("设置")
+            } else {
+                Button {
+                    NSApp.sendAction(Selector(("showSettingsWindow:")), to: nil, from: nil)
+                } label: {
+                    Image(systemName: "gearshape").frame(width: 24, height: 24)
+                }
+                .buttonStyle(.bordered)
+                .help("设置")
+                .accessibilityLabel("设置")
             }
-            .buttonStyle(.bordered)
-            .help("设置")
         }
     }
 
@@ -323,8 +317,8 @@ struct ControlCenterView: View {
         GlassCard {
             VStack(alignment: .leading, spacing: 12) {
                 HStack {
-                    Text("英文原文")
-                        .font(.system(size: 11, weight: .bold, design: .rounded))
+                    Text("英文原文  /  ENGLISH")
+                        .font(.system(size: 11, weight: .medium))
                         .tracking(0.7)
                     Spacer()
                     Text("\(model.inputText.count) / \(TextLogic.maxInputCharacters)")
@@ -337,7 +331,7 @@ struct ControlCenterView: View {
                     .focused($inputFocused)
                     .frame(minHeight: 84, maxHeight: 135)
                     .padding(9)
-                    .background(Color.white.opacity(0.58))
+                    .background(LumaPalette.paper.opacity(0.36))
                     .clipShape(RoundedRectangle(cornerRadius: 11, style: .continuous))
                     .overlay(
                         RoundedRectangle(cornerRadius: 11, style: .continuous)
@@ -354,6 +348,8 @@ struct ControlCenterView: View {
                     }
                     .keyboardShortcut(.return, modifiers: [.command])
                     .disabled(!model.isDictionaryReady || model.isWorking)
+                    .buttonStyle(.borderedProminent)
+                    .tint(LumaPalette.violet)
                     Spacer()
                     Picker("AI", selection: $model.provider) {
                         ForEach(AIProvider.allCases) { provider in
@@ -361,11 +357,11 @@ struct ControlCenterView: View {
                         }
                     }
                     .labelsHidden()
-                    .frame(width: 105)
+                    .frame(width: 96)
                     Button(action: model.translateWithAI) {
                         Label("AI 上下文", systemImage: "sparkles")
                     }
-                    .buttonStyle(.borderedProminent)
+                    .buttonStyle(.bordered)
                     .tint(LumaPalette.violet)
                     .disabled(model.isWorking)
                 }
@@ -397,7 +393,7 @@ struct ControlCenterView: View {
                     .frame(width: 7, height: 7)
             }
             Text(model.statusMessage)
-                .font(.system(size: 10.5, weight: .medium, design: .monospaced))
+                .font(.system(size: 11.5))
                 .foregroundStyle(model.errorMessage.isEmpty ? LumaPalette.slate : LumaPalette.coral)
                 .lineLimit(2)
             Spacer()
@@ -445,7 +441,7 @@ struct APIKeySheet: View {
                 SecureField("输入 \(model.provider.displayName) API Key", text: $model.apiKeyDraft)
                     .textFieldStyle(.roundedBorder)
                 Text("目标主机固定为 \(model.provider.host)，应用不会跟随重定向转发密钥。")
-                    .font(.system(size: 10.5)).foregroundStyle(.secondary)
+                    .font(.system(size: 11.5)).foregroundStyle(.secondary)
             }
 
             Toggle("保存到 macOS 钥匙串", isOn: $model.rememberAPIKey)
@@ -465,6 +461,8 @@ struct APIKeySheet: View {
         }
         .padding(24)
         .frame(width: 500)
+        .background(WindowGlass())
+        .tint(LumaPalette.violet)
     }
 }
 
@@ -522,14 +520,20 @@ struct SettingsView: View {
             .padding(28)
             .tabItem { Label("隐私", systemImage: "lock.shield") }
         }
+        .tint(LumaPalette.violet)
+        .background(WindowGlass())
     }
 }
 
 struct MenuBarContent: View {
     @EnvironmentObject private var model: AppModel
+    @Environment(\.openWindow) private var openWindow
 
     var body: some View {
-        Button("打开 Luma Translate") { model.showMainWindow() }
+        Button("打开 Luma Translate") {
+            openWindow(id: "control-center")
+            NSApp.activate(ignoringOtherApps: true)
+        }
         Button(model.gestureEnabled ? "暂停全局手势" : "开启全局手势") { model.toggleGestureMode() }
         Divider()
         Text(model.gestureEnabled ? "右键双击：离线点译" : "手势已暂停")
