@@ -126,30 +126,48 @@ final class OfflineDictionary: @unchecked Sendable {
     }
 
     private func loadDictionary(from url: URL) throws {
-        let raw: String
+        let raw: Data
         do {
-            raw = try String(contentsOf: url, encoding: .utf8)
+            raw = try Data(contentsOf: url, options: .mappedIfSafe)
         } catch {
             throw LumaError.message("本地词库无法读取。 / The offline dictionary could not be read.")
         }
 
-        var lines = raw.split(separator: "\n", omittingEmptySubsequences: true).makeIterator()
-        guard let header = lines.next(), header.hasPrefix("#SGFT-ECDICT-1\t") else {
-            throw LumaError.message("本地词库格式不兼容。 / Offline dictionary format is incompatible.")
-        }
-        let normalizedKeys = header.contains("\tkeys-normalized")
-
         entries.reserveCapacity(800_000)
-        while let rawLine = lines.next() {
-            let line = rawLine.last == "\r" ? rawLine.dropLast() : rawLine[...]
-            let fields = line.split(separator: "\t", omittingEmptySubsequences: false)
-            guard fields.count == 5 || fields.count == 9 else { continue }
+        // The resource is ASCII TSV with base64 fields. Scan bytes directly to avoid
+        // millions of Unicode grapheme traversals and temporary Substrings at startup.
+        try raw.withUnsafeBytes { (buffer: UnsafeRawBufferPointer) in
+            let bytes = buffer.bindMemory(to: UInt8.self)
+            var cursor = 0
+            while cursor < bytes.count, bytes[cursor] != 10 { cursor += 1 }
+            let header = String(decoding: bytes[0..<cursor], as: UTF8.self)
+            guard header.hasPrefix("#SGFT-ECDICT-1\t") else {
+                throw LumaError.message("本地词库格式不兼容。 / Offline dictionary format is incompatible.")
+            }
+            let normalizedKeys = header.contains("\tkeys-normalized")
+            if cursor < bytes.count { cursor += 1 }
+            var fields: [Range<Int>] = []
+            fields.reserveCapacity(9)
+            while cursor < bytes.count {
+                fields.removeAll(keepingCapacity: true)
+                var fieldStart = cursor
+                while cursor < bytes.count, bytes[cursor] != 10 {
+                    if bytes[cursor] == 9 {
+                        fields.append(fieldStart..<cursor)
+                        fieldStart = cursor + 1
+                    }
+                    cursor += 1
+                }
+                let fieldEnd = cursor > fieldStart && bytes[cursor - 1] == 13 ? cursor - 1 : cursor
+                fields.append(fieldStart..<fieldEnd)
+                if cursor < bytes.count { cursor += 1 }
+                guard fields.count == 5 || fields.count == 9 else { continue }
             guard
-                let headword = decodeBase64(fields[0]),
-                let phonetic = decodeBase64(fields[1]),
-                let definition = decodeBase64(fields[2]),
-                let translation = decodeBase64(fields[3]),
-                let exchange = decodeBase64(fields[4])
+                let headword = decodeBase64(bytes, range: fields[0]),
+                let phonetic = decodeBase64(bytes, range: fields[1]),
+                let definition = decodeBase64(bytes, range: fields[2]),
+                let translation = decodeBase64(bytes, range: fields[3]),
+                let exchange = decodeBase64(bytes, range: fields[4])
             else {
                 throw LumaError.message("本地词库内容损坏。 / Offline dictionary data is damaged.")
             }
@@ -161,11 +179,12 @@ final class OfflineDictionary: @unchecked Sendable {
                     definition: definition,
                     translation: translation,
                     exchange: exchange,
-                    academicNotes: fields.count == 9 ? (decodeBase64(fields[7]) ?? "") : "",
-                    source: fields.count == 9 ? (decodeBase64(fields[8]) ?? "") : "",
-                    exampleEn: fields.count == 9 ? (decodeBase64(fields[5]) ?? "") : "",
-                    exampleZh: fields.count == 9 ? (decodeBase64(fields[6]) ?? "") : ""
+                    academicNotes: fields.count == 9 ? (decodeBase64(bytes, range: fields[7]) ?? "") : "",
+                    source: fields.count == 9 ? (decodeBase64(bytes, range: fields[8]) ?? "") : "",
+                    exampleEn: fields.count == 9 ? (decodeBase64(bytes, range: fields[5]) ?? "") : "",
+                    exampleZh: fields.count == 9 ? (decodeBase64(bytes, range: fields[6]) ?? "") : ""
                 )
+            }
             }
         }
 
@@ -174,8 +193,10 @@ final class OfflineDictionary: @unchecked Sendable {
         }
     }
 
-    private func decodeBase64(_ value: Substring) -> String? {
-        guard let data = Data(base64Encoded: String(value)) else { return nil }
+    private func decodeBase64(_ bytes: UnsafeBufferPointer<UInt8>, range: Range<Int>) -> String? {
+        if range.isEmpty { return "" }
+        let encoded = String(decoding: bytes[range], as: UTF8.self)
+        guard let data = Data(base64Encoded: encoded) else { return nil }
         return String(data: data, encoding: .utf8)
     }
 

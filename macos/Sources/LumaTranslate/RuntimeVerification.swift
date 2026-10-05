@@ -20,10 +20,11 @@ enum RuntimeVerification {
                 if model.isDictionaryReady, model.controlCenterWindow != nil { break }
                 try await Task.sleep(nanoseconds: 100_000_000)
             }
-            guard model.isDictionaryReady, model.dictionaryEntryCount > 47_000 else {
+            guard model.isDictionaryReady, model.dictionaryEntryCount > 750_000 else {
                 throw LumaError.message("Bundled dictionary failed to load: \(model.errorMessage)")
             }
             checks.append("Bundled dictionary loaded: \(model.dictionaryEntryCount)")
+            let dictionaryReadySeconds = Date().timeIntervalSince(started)
             model.inputText = "significant"
             model.translateOffline()
             for _ in 0..<100 {
@@ -77,6 +78,7 @@ enum RuntimeVerification {
             let report: [String: Any] = [
                 "passed": true, "os": ProcessInfo.processInfo.operatingSystemVersionString,
                 "verificationSeconds": Date().timeIntervalSince(started),
+                "dictionaryReadySeconds": dictionaryReadySeconds,
                 "checks": checks, "bundle": Bundle.main.bundleIdentifier ?? "",
                 "notes": "Global mouse gestures and user-granted screen capture permissions need an interactive user session. No cloud API request was made."
             ]
