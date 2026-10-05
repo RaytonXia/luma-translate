@@ -1,6 +1,6 @@
 # Luma Translate 1.1.0
 
-原生 Windows / macOS 即时英译中工具，采用雾白与鼠尾草绿界面。macOS 使用原生毛玻璃材质；Windows 使用清晰的浅色面板和圆角。新 Logo 由 SVG 矢量母版导出，包含 2048 px PNG、Windows 多尺寸 ICO 和 macOS ICNS。
+原生 Windows / macOS 即时英译中工具，采用雾白与鼠尾草绿界面。macOS 使用原生毛玻璃材质；Windows 使用清晰的浅色面板和圆角。保留原有蓝紫色双页、声波与点击星芒 Logo；Windows 主界面改用独立 512 px 图片，修复放大托盘小图标导致的模糊。品牌原图与图案保持不变，安装包包含 Windows 多尺寸 ICO 和 macOS ICNS。
 
 ## 安装与使用
 
