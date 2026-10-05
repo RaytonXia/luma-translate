@@ -29,24 +29,18 @@
 - 全局手势需要用户授予“辅助功能”和“屏幕录制”权限
 - 从源码构建需要 Xcode 15 或更新版本（命令行工具也要安装）
 
-## 最简单的构建方式：GitHub Actions
+## 安装包与 GitHub Actions
 
-把本目录提交到 GitHub，然后打开 **Actions → Build macOS Universal → Run workflow**。完成后下载名为 `Luma-Translate-macOS-Universal` 的 Artifact，其中包含：
+本次交付提供 `Luma-Translate-macOS-Universal-1.1.0.dmg`，打开后拖入 Applications 即可安装，M1 无需 Rosetta。
 
-```text
-Luma-Translate-macOS-Universal-1.0.0.dmg
-Luma-Translate-macOS-Universal-1.0.0.zip
-SHA256SUMS.txt
-```
-
-推送形如 `v1.0.0` 的标签时，工作流还会自动创建/更新对应的 GitHub Release 并附上这些文件。
+在仓库根目录执行 `.github/workflows/verify-mist-ui.yml`（Actions 中名称为 **Build and verify Luma desktop installers**）。`Luma-macOS-Universal` artifact 包含 DMG、应用 ZIP 和 Apple Silicon 验证记录；`Luma-macOS-Intel-verification` 包含同一安装包的 Intel 运行结果。这个验证工作流不会自动发布 Release。
 
 ## 在 Mac 本机构建
 
 ```bash
 swift test
 chmod +x scripts/build-universal.sh
-LUMA_VERSION=1.0.0 scripts/build-universal.sh
+LUMA_VERSION=1.1.0 scripts/build-universal.sh
 lipo -archs ".build/luma-universal/Luma Translate.app/Contents/MacOS/LumaTranslate"
 ```
 
@@ -65,7 +59,7 @@ x86_64 arm64
 3. 若屏幕录制刚授权后仍显示不可用，完全退出应用再打开一次。
 4. 将鼠标放在任意应用中的英文单词上，快速按两次右键。
 
-没有 Apple Developer ID 签名的自构建版本采用 ad-hoc 签名。首次打开时可在 Finder 中按住 Control 点击应用并选择“打开”。公开分发前应使用 Developer ID 签名并完成 notarization。
+没有 Apple Developer ID 签名的自构建版本采用 ad-hoc 签名。本次包尚未经过 Apple 公证；若首次打开被系统阻止，核实来源后可在“系统设置 → 隐私与安全性”对本应用选择“仍要打开”。
 
 ## 签名与公证
 
@@ -73,12 +67,12 @@ x86_64 arm64
 
 ```bash
 CODE_SIGN_IDENTITY="Developer ID Application: Your Company (TEAMID)" \
-  LUMA_VERSION=1.0.0 scripts/build-universal.sh
+  LUMA_VERSION=1.1.0 scripts/build-universal.sh
 
 APPLE_ID="name@example.com" \
 APPLE_TEAM_ID="TEAMID" \
 APPLE_APP_PASSWORD="xxxx-xxxx-xxxx-xxxx" \
-  scripts/notarize.sh ".build/dist/Luma-Translate-macOS-Universal-1.0.0.dmg"
+  scripts/notarize.sh ".build/dist/Luma-Translate-macOS-Universal-1.1.0.dmg"
 ```
 
 不要把证书、密码或 API Key 提交到仓库。

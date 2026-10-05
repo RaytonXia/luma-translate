@@ -2,16 +2,16 @@
 
 ## ECDICT
 
-The embedded offline English–Chinese core dictionary is derived from the
-[ECDICT project](https://github.com/skywind3000/ECDICT), downloaded and filtered
-on 2026-07-22. The source repository describes ECDICT as a free English-to-Chinese
-dictionary database and publishes it under the MIT License. The license text is
-included in `licenses/ECDICT_LICENSE.txt`.
+The embedded offline English–Chinese dictionary is derived from the
+[ECDICT project](https://github.com/skywind3000/ECDICT), pinned at commit
+`bc015ed2e24a7abef49fc6dbbb7fe32c1dadaf8b`. The MIT license text is included
+in `licenses/ECDICT_LICENSE.txt` and in macOS application resources.
 
-This application embeds a filtered core subset selected from ECDICT frequency,
-Oxford/core-tag, and Collins-rank metadata, plus a separately maintained set of
-Singapore terms and plain-English function-word explanations. No ECDICT audio
-URLs or online services are used.
+This build retains 767,778 eligible Chinese entries, with 34 separately authored
+academic/phrase supplements and the existing Singapore overlay. The examples
+in the supplement are original illustrative examples, not quotations or research
+findings. Counts, provenance and hashes are in `source/data/dictionary-manifest.json`.
+No ECDICT audio URLs or online services are used.
 
 ECDICT's project history states that its entries aggregate several earlier word
 lists, open dictionaries, web-collected material, and community contributions.
