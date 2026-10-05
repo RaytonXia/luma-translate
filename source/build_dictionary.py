@@ -32,7 +32,7 @@ for item in supplement:
     translation=(old[3]+'\n\n[学术义项补充]\n' if append and old[3] else '')+item['translation']
     definition=(old[2]+'\n\n[Academic usage]\n' if append and old[2] else '')+item['definition']
     rows[key]=[key,item['phonetic'],definition,translation,old[4],item['example_en'],item['example_zh'],item['academic_notes'],'ECDICT + Luma 学术/语块补充（例句为原创示例）']
-raw=('#SGFT-ECDICT-1\tECDICT-expanded-2026-10-05+academic-1\n'+'\n'.join('\t'.join(base64.b64encode(v.encode()).decode() for v in row) for key,row in sorted(rows.items()))+'\n').encode()
+raw=('#SGFT-ECDICT-1\tECDICT-expanded-2026-10-05+academic-1\tkeys-normalized\n'+'\n'.join('\t'.join(base64.b64encode(v.encode()).decode() for v in row) for key,row in sorted(rows.items()))+'\n').encode()
 resources=root/'macos/Sources/LumaTranslate/Resources'
 (root/'source/data/offline_ecdict_core.tsv.gz').write_bytes(gzip.compress(raw,compresslevel=9,mtime=0))
 (resources/'offline_ecdict_core.tsv').write_bytes(raw)

@@ -9,7 +9,7 @@
   "source_url": "https://github.com/skywind3000/ECDICT",
   "source_commit": "bc015ed2e24a7abef49fc6dbbb7fe32c1dadaf8b",
   "source_csv_sha256": "1a6947e04785db63613a92e14903cdae7954f7e84860b10e68e5c7cbb3f9c3cf",
-  "resource_sha256": "66534f38ee0489270749c2faa1f5d16af822f22a4769a07f7dfcb252d9d53841",
+  "resource_sha256": "1004dd8a509360e8a0d222d00310e4cca2be78ed5991f65d8fa510946bb27ef0",
   "license": "MIT; see ECDICT_LICENSE.txt",
   "coverage": "All eligible Chinese entries in the pinned upstream CSV. Missing English definitions, phonetics and examples are explicitly labelled. Neither this data nor AI output guarantees every historical or discipline-specific sense.",
   "academic_reference_notes": [

@@ -137,6 +137,7 @@ final class OfflineDictionary: @unchecked Sendable {
         guard let header = lines.next(), header.hasPrefix("#SGFT-ECDICT-1\t") else {
             throw LumaError.message("本地词库格式不兼容。 / Offline dictionary format is incompatible.")
         }
+        let normalizedKeys = header.contains("\tkeys-normalized")
 
         entries.reserveCapacity(800_000)
         while let rawLine = lines.next() {
@@ -152,7 +153,7 @@ final class OfflineDictionary: @unchecked Sendable {
             else {
                 throw LumaError.message("本地词库内容损坏。 / Offline dictionary data is damaged.")
             }
-            let key = TextLogic.lookupKey(headword)
+            let key = normalizedKeys ? headword : TextLogic.lookupKey(headword)
             if !key.isEmpty, !translation.isEmpty {
                 entries[key] = OfflineEntry(
                     headword: headword,
@@ -179,10 +180,9 @@ final class OfflineDictionary: @unchecked Sendable {
     }
 
     private func addExchangeAliases() {
-        let snapshot = Array(entries.values)
         var aliases: [(String, OfflineEntry)] = []
         aliases.reserveCapacity(12_000)
-        for entry in snapshot where !entry.exchange.isEmpty {
+        for entry in entries.values where !entry.exchange.isEmpty {
             for form in entry.exchange.split(separator: "/") {
                 let value: Substring
                 if let colon = form.firstIndex(of: ":") {

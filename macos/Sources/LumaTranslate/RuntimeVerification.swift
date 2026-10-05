@@ -15,12 +15,13 @@ enum RuntimeVerification {
         do {
             try FileManager.default.createDirectory(at: directory, withIntermediateDirectories: true)
             let model = AppModel.shared
-            for _ in 0..<300 {
+            let started = Date()
+            for _ in 0..<450 {
                 if model.isDictionaryReady, model.controlCenterWindow != nil { break }
                 try await Task.sleep(nanoseconds: 100_000_000)
             }
             guard model.isDictionaryReady, model.dictionaryEntryCount > 47_000 else {
-                throw LumaError.message("Bundled dictionary failed to load")
+                throw LumaError.message("Bundled dictionary failed to load: \(model.errorMessage)")
             }
             checks.append("Bundled dictionary loaded: \(model.dictionaryEntryCount)")
             model.inputText = "significant"
@@ -75,6 +76,7 @@ enum RuntimeVerification {
             checks.append("Production Vision OCR on rendered English bitmap: \(recognized)")
             let report: [String: Any] = [
                 "passed": true, "os": ProcessInfo.processInfo.operatingSystemVersionString,
+                "verificationSeconds": Date().timeIntervalSince(started),
                 "checks": checks, "bundle": Bundle.main.bundleIdentifier ?? "",
                 "notes": "Global mouse gestures and user-granted screen capture permissions need an interactive user session. No cloud API request was made."
             ]

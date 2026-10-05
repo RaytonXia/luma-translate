@@ -527,6 +527,7 @@ namespace SGFloatingTranslator
                     string header = reader.ReadLine();
                     if (String.IsNullOrWhiteSpace(header) || !header.StartsWith("#SGFT-ECDICT-1\t", StringComparison.Ordinal))
                         throw new TranslatorException("本地词库格式不兼容。 / Offline dictionary format is incompatible.");
+                    bool normalizedKeys = header.Contains("\tkeys-normalized");
                     string line;
                     while ((line = reader.ReadLine()) != null)
                     {
@@ -548,7 +549,7 @@ namespace SGFloatingTranslator
                                 entry.AcademicNotes = FromBase64(fields[7]);
                                 entry.Source = FromBase64(fields[8]);
                             }
-                            string key = TextLogic.NormaliseLookupKey(entry.Headword);
+                            string key = normalizedKeys ? entry.Headword : TextLogic.NormaliseLookupKey(entry.Headword);
                             if (key.Length > 0 && entry.Translation.Length > 0)
                                 entries[key] = entry;
                         }
