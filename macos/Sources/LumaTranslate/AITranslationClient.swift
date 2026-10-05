@@ -31,7 +31,8 @@ final class AITranslationClient: @unchecked Sendable {
         model: String,
         apiKey: String,
         englishText: String,
-        sentenceOnly: Bool
+        sentenceOnly: Bool,
+        context: String = ""
     ) async throws -> TranslationResult {
         let text = TextLogic.normalizeInput(englishText)
         guard !apiKey.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty else {
@@ -47,9 +48,9 @@ final class AITranslationClient: @unchecked Sendable {
         let request: URLRequest
         switch provider {
         case .deepseek:
-            request = try deepSeekRequest(model: safeModel, key: apiKey, text: text, sentenceOnly: sentenceOnly)
+            request = try deepSeekRequest(model: safeModel, key: apiKey, text: text, sentenceOnly: sentenceOnly, context: context)
         case .gemini:
-            request = try geminiRequest(model: safeModel, key: apiKey, text: text, sentenceOnly: sentenceOnly)
+            request = try geminiRequest(model: safeModel, key: apiKey, text: text, sentenceOnly: sentenceOnly, context: context)
         }
 
         let body = try await send(request, provider: provider)
@@ -115,7 +116,8 @@ final class AITranslationClient: @unchecked Sendable {
         model: String,
         key: String,
         text: String,
-        sentenceOnly: Bool
+        sentenceOnly: Bool,
+        context: String = ""
     ) throws -> URLRequest {
         let systemPrompt: String
         let maximumTokens: Int
@@ -128,7 +130,7 @@ final class AITranslationClient: @unchecked Sendable {
             systemPrompt = DictionaryQuality.systemPrompt
             maximumTokens = 6_000
         }
-        let inputData = try jsonData(["selected_text": text])
+        let inputData = try jsonData(["selected_text": text, "context": String(context.prefix(TextLogic.maxInputCharacters))])
         let inputJSON = String(decoding: inputData, as: UTF8.self)
         let body: [String: Any] = [
             "model": model,
@@ -157,7 +159,8 @@ final class AITranslationClient: @unchecked Sendable {
         model: String,
         key: String,
         text: String,
-        sentenceOnly: Bool
+        sentenceOnly: Bool,
+        context: String = ""
     ) throws -> URLRequest {
         let systemPrompt: String
         let schema: [String: Any]
@@ -184,7 +187,7 @@ final class AITranslationClient: @unchecked Sendable {
             ])
             maximumTokens = 6_000
         }
-        let inputData = try jsonData(["selected_text": text])
+        let inputData = try jsonData(["selected_text": text, "context": String(context.prefix(TextLogic.maxInputCharacters))])
         let inputJSON = String(decoding: inputData, as: UTF8.self)
         let body: [String: Any] = [
             "model": model,
@@ -276,7 +279,7 @@ final class AITranslationClient: @unchecked Sendable {
         return try fullResult(values, source: source, provider: .gemini)
     }
 
-    private func fullResult(
+    func fullResult(
         _ values: [String: Any],
         source: String,
         provider: AIProvider

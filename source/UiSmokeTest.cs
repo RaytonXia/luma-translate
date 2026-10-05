@@ -49,6 +49,11 @@ namespace SGFloatingTranslator
                 Application.DoEvents();
                 CheckVisibleChildren(main);
                 Save(main, output, "windows-main-small");
+                source.Text = "significant";
+                Invoke(main, "TranslateManualText");
+                Application.DoEvents();
+                Check(Field<RichTextBox>(main, "detailsBox").Text.Contains("学术语境"), "academic notes reach main window");
+                Save(main, output, "windows-academic");
                 main.Hide();
             }
             using (AiSettingsDialog settings = new AiSettingsDialog("deepseek", false, false, false, false, false, false, "deepseek-chat", "gemini-2.5-flash"))
@@ -80,6 +85,11 @@ namespace SGFloatingTranslator
                 Settle();
                 Save(popup, output, "windows-popup-long");
                 CheckVisibleChildren(popup);
+                TranslationResult academic = dictionary.Translate("confidence interval");
+                popup.ShowResult("confidence interval", academic, "The 95% confidence interval was reported.", new Point(400, 280));
+                Settle();
+                Check(Field<Label>(popup, "usageLabel").Text.Contains("长期覆盖率"), "academic notes reach popup");
+                Save(popup, output, "windows-popup-academic");
                 popup.Hide();
             }
             Console.WriteLine("UI checks: " + (failures == 0 ? "PASS" : "FAIL " + failures));

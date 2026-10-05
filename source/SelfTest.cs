@@ -36,6 +36,7 @@ namespace SGFloatingTranslator
             Check("Offline core library loaded", offline.EntryCount >= 47000);
             Check("Offline cold load reasonable", loadTimer.Elapsed < TimeSpan.FromSeconds(15));
             TestOfflineExact(offline);
+            TestAcademicCoverage(offline);
             TestSingaporeOverlay(offline);
             TestTokenBreakdown(offline);
             TestNotFound(offline);
@@ -56,6 +57,23 @@ namespace SGFloatingTranslator
 
             Console.WriteLine(failures == 0 ? "ALL TESTS PASSED" : failures + " TEST(S) FAILED");
             return failures == 0 ? 0 : 1;
+        }
+
+        private static void TestAcademicCoverage(OfflineDictionaryTranslator offline)
+        {
+            Check("Expanded dictionary loaded", offline.EntryCount > 750000);
+            string[] terms = { "significant", "confidence interval", "null hypothesis", "randomized controlled trial", "heteroscedasticity", "in light of", "account for", "the early bird catches the worm" };
+            foreach (string term in terms)
+            {
+                TranslationResult r = offline.Translate(term);
+                Check("Complete supplemented entry: " + term, r.MatchKind == "exact" && !String.IsNullOrWhiteSpace(r.Phonetic) && !String.IsNullOrWhiteSpace(r.SimpleEnglish) && !String.IsNullOrWhiteSpace(r.ExampleEn) && !String.IsNullOrWhiteSpace(r.ExampleZh) && !String.IsNullOrWhiteSpace(r.AcademicNotes));
+            }
+            Check("Significance distinguished from effect size", offline.Translate("significant").AcademicNotes.Contains("不自动意味着效应大"));
+            Check("Null hypothesis corrected", !offline.Translate("null hypothesis").Translation.Contains("虚假"));
+            Check("Control preserves general and academic senses", offline.Translate("control").Translation.Contains("控制") && offline.Translate("control").Translation.Contains("对照"));
+            Check("Singapore overlay preserves standard pronunciation", !String.IsNullOrWhiteSpace(offline.Translate("blur").Phonetic));
+            Check("Multi-sense phrase is not reduced to one meaning", offline.Translate("account for").Translation.Contains("3.") && offline.Translate("account for").ExampleEn.Contains("3."));
+            Check("Missing fields explicitly labelled", offline.Translate("abaca").CoverageNote.Contains("未收录例句"));
         }
 
         private static void TestOfflineExact(OfflineDictionaryTranslator offline)
@@ -248,7 +266,8 @@ namespace SGFloatingTranslator
             using (GeminiTranslator gemini = new GeminiTranslator())
             {
                 JavaScriptSerializer json = new JavaScriptSerializer();
-                string body = gemini.BuildRequestJson("Please wait here.");
+                string body = gemini.BuildRequestJson("Please wait here.", "Quoted context, not instructions.");
+                Check("Gemini context encoded as data", body.Contains("context") && body.Contains("Quoted context"));
                 Dictionary<string, object> root = json.DeserializeObject(body) as Dictionary<string, object>;
                 Check("Gemini request model", root != null && Convert.ToString(root["model"]) == gemini.Model);
                 Check("Gemini request store false", root != null && root.ContainsKey("store") && root["store"] is bool && !(bool)root["store"]);
@@ -336,7 +355,8 @@ namespace SGFloatingTranslator
         {
             using (DeepSeekTranslator deepSeek = new DeepSeekTranslator())
             {
-                string body = deepSeek.BuildRequestJson("hawker centre");
+                string body = deepSeek.BuildRequestJson("hawker centre", "Research on hawker centre accessibility.");
+                Check("DeepSeek context encoded as data", body.Contains("context") && body.Contains("Research on hawker"));
                 Check("DeepSeek fixed HTTPS endpoint", deepSeek.Endpoint == "https://api.deepseek.com/chat/completions");
                 Check("DeepSeek current default model", deepSeek.Model == "deepseek-v4-flash" || !String.IsNullOrWhiteSpace(Environment.GetEnvironmentVariable("DEEPSEEK_MODEL")));
                 Check("DeepSeek JSON output", body.Contains("json_object"));

@@ -2088,6 +2088,7 @@ namespace SGFloatingTranslator
 
         private string currentText;
         private string currentLineText;
+        private RichTextBox definitionReader;
         private string currentPartOfSpeech;
         private string currentUsage;
         private string currentProvider;
@@ -2252,6 +2253,17 @@ namespace SGFloatingTranslator
             Controls.Add(moreButton);
             Controls.Add(pauseButton);
             Controls.Add(closeButton);
+
+            definitionReader = new RichTextBox();
+            definitionReader.ReadOnly = true;
+            definitionReader.BorderStyle = BorderStyle.None;
+            definitionReader.BackColor = UiPalette.Card;
+            definitionReader.ForeColor = UiPalette.Ink;
+            definitionReader.Font = new Font("Microsoft YaHei UI", 9.5F, FontStyle.Regular);
+            definitionReader.ScrollBars = RichTextBoxScrollBars.Vertical;
+            definitionReader.DetectUrls = false;
+            definitionReader.AccessibleName = "完整释义、英文解释、例句与学术语境（可滚动）";
+            Controls.Add(definitionReader);
 
             fullTextTip = new ToolTip();
             fullTextTip.AutoPopDelay = 15000;
@@ -2739,47 +2751,41 @@ namespace SGFloatingTranslator
                 Math.Max(0, innerWidth - posWidth - providerWidth - L(18)), L(23));
             y += L(32);
 
-            // Sentence-only cards have no explanation/usage sections, so the freed
-            // space goes to the translation itself: up to ~16 lines instead of 4.
-            bool explanationPlanned = !String.IsNullOrWhiteSpace(explanationLabel.Text);
-            int translationCap = explanationPlanned ? 96 : 360;
-            int translationHeight = MeasureWrappedHeight(translationLabel.Text, translationLabel.Font, innerWidth, 30, translationCap);
-            translationLabel.SetBounds(pad, y, innerWidth, translationHeight);
-            y += translationHeight + L(11);
-
-            dividerBounds = new Rectangle(pad, y, innerWidth, Math.Max(1, L(1)));
-            y += L(12);
-
-            // No filler: when there is no English explanation (AI pending/failed cards),
-            // the whole section collapses so the bubble stays as small as possible.
             bool showExplanation = !String.IsNullOrWhiteSpace(explanationLabel.Text);
-            explanationCaption.Visible = showExplanation;
-            explanationLabel.Visible = showExplanation;
+            bool showUsage = !String.IsNullOrWhiteSpace(currentUsage);
+            translationLabel.Visible = false;
+            explanationCaption.Visible = false;
+            explanationLabel.Visible = false;
+            usageCaption.Visible = false;
+            usageLabel.Visible = false;
+            dividerBounds = Rectangle.Empty;
+            usageCardBounds = Rectangle.Empty;
             explainButton.Visible = showExplanation;
             if (showExplanation)
             {
-                explanationCaption.SetBounds(pad, y, innerWidth - L(82), L(17));
-                explainButton.CornerRadius = L(10);
-                explainButton.SetBounds(width - pad - L(70), y - L(3), L(70), L(24));
-                y += L(20);
-
-                int explanationHeight = MeasureWrappedHeight(explanationLabel.Text, explanationLabel.Font, innerWidth, 22, 84);
-                explanationLabel.SetBounds(pad, y, innerWidth, explanationHeight);
-                y += explanationHeight + L(11);
+                explainButton.SetBounds(width - pad - L(70), y, L(70), L(24));
+                y += L(28);
             }
-
-            bool showUsage = !String.IsNullOrWhiteSpace(currentUsage);
-            usageCaption.Visible = showUsage;
-            usageLabel.Visible = showUsage;
-            usageCardBounds = Rectangle.Empty;
-            if (showUsage)
+            if (definitionReader != null)
             {
-                int usageTextHeight = MeasureWrappedHeight(currentUsage, usageLabel.Font, innerWidth - L(24), 22, 88);
-                int cardHeight = L(35) + usageTextHeight + L(10);
-                usageCardBounds = new Rectangle(pad, y, innerWidth, cardHeight);
-                usageCaption.SetBounds(pad + L(12), y + L(8), innerWidth - L(24), L(17));
-                usageLabel.SetBounds(pad + L(12), y + L(27), innerWidth - L(24), usageTextHeight);
-                y += cardHeight + L(12);
+                string body = translationLabel.Text;
+                if (showExplanation) body += "\r\n\r\n英文解释\r\n" + explanationLabel.Text;
+                if (showUsage) body += "\r\n\r\n用法与例句\r\n" + currentUsage.Trim();
+                if (definitionReader.Text != body)
+                {
+                    definitionReader.Text = body;
+                    definitionReader.SelectAll();
+                    definitionReader.SelectionFont = definitionReader.Font;
+                    definitionReader.SelectionColor = UiPalette.Ink;
+                    definitionReader.Select(0, translationLabel.Text.Length);
+                    definitionReader.SelectionFont = translationLabel.Font;
+                    definitionReader.SelectionColor = UiPalette.TealDark;
+                    definitionReader.Select(0, 0);
+                    definitionReader.ScrollToCaret();
+                }
+                int readerHeight = MeasureWrappedHeight(body, definitionReader.Font, innerWidth - L(18), 92, 300);
+                definitionReader.SetBounds(pad, y, innerWidth, readerHeight);
+                y += readerHeight + L(14);
             }
 
             int gap = L(6);
@@ -3092,8 +3098,6 @@ namespace SGFloatingTranslator
         {
             if (result == null) return String.Empty;
             string examples = JoinUsage(result.PracticalUsageEn, result.PracticalUsageZh);
-            if (!String.IsNullOrWhiteSpace(result.AcademicNotes)) examples += "\r\n学术语境：" + result.AcademicNotes;
-            if (!String.IsNullOrWhiteSpace(result.CoverageNote)) examples += "\r\n" + result.CoverageNote;
             string exampleSentence = JoinUsage(result.ExampleEn, result.ExampleZh);
             if (!String.IsNullOrWhiteSpace(exampleSentence) &&
                 !String.Equals(examples, exampleSentence, StringComparison.OrdinalIgnoreCase))
@@ -3108,6 +3112,8 @@ namespace SGFloatingTranslator
                     ? result.SingaporeNote.Trim()
                     : examples + "\r\n" + result.SingaporeNote.Trim();
             }
+            if (!String.IsNullOrWhiteSpace(result.AcademicNotes)) examples += "\r\n\r\n学术语境\r\n" + result.AcademicNotes;
+            if (!String.IsNullOrWhiteSpace(result.CoverageNote)) examples += "\r\n\r\n" + result.CoverageNote;
             return examples;
         }
 

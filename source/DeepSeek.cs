@@ -104,7 +104,7 @@ namespace SGFloatingTranslator
             client = new HttpClient(handler);
             client.MaxResponseContentBufferSize = MaximumResponseBytes;
 
-            int timeoutSeconds = 30;
+            int timeoutSeconds = 60;
             int configuredTimeout;
             if (Int32.TryParse(
                 Environment.GetEnvironmentVariable("SG_TRANSLATOR_TIMEOUT_SECONDS"),
@@ -121,13 +121,13 @@ namespace SGFloatingTranslator
         public async Task<DeepSeekTranslationResult> TranslateAsync(
             string apiKey,
             string englishText,
-            CancellationToken cancellationToken)
+            CancellationToken cancellationToken, string context = "")
         {
             ThrowIfDisposed();
             cancellationToken.ThrowIfCancellationRequested();
             string key = ValidateApiKey(apiKey);
             string sourceText = ValidateEnglishInput(englishText);
-            string body = await PostChatAsync(key, BuildRequestJson(sourceText), cancellationToken);
+            string body = await PostChatAsync(key, BuildRequestJson(sourceText, context), cancellationToken);
             return ParseApiResponse(body, sourceText);
         }
 
@@ -210,7 +210,7 @@ namespace SGFloatingTranslator
         /// Builds the documented OpenAI-compatible Chat Completions payload. Kept internal so
         /// tests can assert privacy, model, JSON mode, non-streaming and non-thinking settings.
         /// </summary>
-        internal string BuildRequestJson(string englishText)
+        internal string BuildRequestJson(string englishText, string context = "")
         {
             string sourceText = ValidateEnglishInput(englishText);
             JavaScriptSerializer json = NewSerializer();
@@ -219,6 +219,7 @@ namespace SGFloatingTranslator
 
             Dictionary<string, object> inputObject = new Dictionary<string, object>();
             inputObject["selected_text"] = sourceText;
+            inputObject["context"] = context;
 
             Dictionary<string, object> systemMessage = new Dictionary<string, object>();
             systemMessage["role"] = "system";

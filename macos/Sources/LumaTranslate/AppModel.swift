@@ -65,6 +65,7 @@ final class AppModel: ObservableObject {
         let text: String
         let sentenceOnly: Bool
         let popupAnchor: CGPoint?
+        var context = ""
     }
 
     private let defaults = UserDefaults.standard
@@ -376,7 +377,7 @@ final class AppModel: ObservableObject {
                     onSpeak: { [weak self] in self?.speak(result.speakText) },
                     onAI: { [weak self] in
                         let context = TextLogic.isEnglishInput(hit.line) ? hit.line : hit.word
-                        self?.requestAI(text: context, sentenceOnly: false, popupAnchor: hit.anchor)
+                        self?.requestAI(text: hit.word, sentenceOnly: false, popupAnchor: hit.anchor, context: context)
                     }
                 )
             } catch is CancellationError {
@@ -406,7 +407,7 @@ final class AppModel: ObservableObject {
                 guard !Task.isCancelled else { return }
                 self.cursorBadge.restoreAfterCapture()
                 self.inputText = text
-                self.requestAI(text: text, sentenceOnly: true, popupAnchor: anchor)
+                self.requestAI(text: text, sentenceOnly: TextLogic.englishWords(in: text).count > 30, popupAnchor: anchor)
             } catch is CancellationError {
                 self?.cursorBadge.restoreAfterCapture()
             } catch {
@@ -420,14 +421,14 @@ final class AppModel: ObservableObject {
         }
     }
 
-    private func requestAI(text: String, sentenceOnly: Bool, popupAnchor: CGPoint?) {
+    private func requestAI(text: String, sentenceOnly: Bool, popupAnchor: CGPoint?, context: String = "") {
         let normalized = TextLogic.normalizeInput(text)
         guard validateInput(normalized) else {
             if let popupAnchor { popup.showMessage(errorMessage, at: popupAnchor, isError: true) }
             return
         }
         guard providerHasKey else {
-            pendingAIRequest = PendingAIRequest(text: normalized, sentenceOnly: sentenceOnly, popupAnchor: popupAnchor)
+            pendingAIRequest = PendingAIRequest(text: normalized, sentenceOnly: sentenceOnly, popupAnchor: popupAnchor, context: context)
             apiKeyDraft = ""
             showAPIKeySheet = true
             popup.setAIBusy(false)
@@ -435,7 +436,7 @@ final class AppModel: ObservableObject {
             statusMessage = "请先配置 \(provider.displayName) API 密钥。"
             return
         }
-        let pending = PendingAIRequest(text: normalized, sentenceOnly: sentenceOnly, popupAnchor: popupAnchor)
+        let pending = PendingAIRequest(text: normalized, sentenceOnly: sentenceOnly, popupAnchor: popupAnchor, context: context)
         guard hasCloudConsent(for: provider) else {
             pendingAIRequest = pending
             showCloudConsent = true
@@ -464,7 +465,8 @@ final class AppModel: ObservableObject {
                     model: selectedModel,
                     apiKey: key,
                     englishText: request.text,
-                    sentenceOnly: request.sentenceOnly
+                    sentenceOnly: request.sentenceOnly,
+                    context: request.context
                 )
                 guard !Task.isCancelled, requestVersion == self.aiRequestVersion else { return }
                 self.currentResult = result
