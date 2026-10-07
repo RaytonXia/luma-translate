@@ -53,7 +53,7 @@ jobs:
       - uses: actions/checkout@v4
       - name: Compile app
         shell: powershell
-        run: ./source/build.ps1
+        run: ./source/build.ps1 -Test -VisualTest
       - name: Build per-user installer
         shell: powershell
         run: |
@@ -62,5 +62,7 @@ jobs:
       - uses: actions/upload-artifact@v4
         with:
           name: Luma-Windows-Setup
-          path: dist/*
+          path: |
+            dist/*
+            verification/*
           if-no-files-found: error

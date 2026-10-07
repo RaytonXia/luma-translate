@@ -7,6 +7,7 @@ mkdir -p "$VERIFY_DIR"
 # Intel downloads the ARM artifact, including its verification directory. Never
 # let those earlier results survive a failed verification on the current host.
 rm -f "$VERIFY_DIR/runtime.json" "$VERIFY_DIR/failure.txt" "$VERIFY_DIR/main.png" "$VERIFY_DIR/minimum.png"
+rm -f "$VERIFY_DIR/gestures.json" "$VERIFY_DIR/fixture.json" "$VERIFY_DIR"/popup-*.png
 DMG="$DIST_DIR/Luma-Translate-macOS-Universal-1.1.1.dmg"
 MOUNT_DIR="$ROOT_DIR/.build/verify-mount"
 INSTALL_DIR="$ROOT_DIR/.build/verify-install"

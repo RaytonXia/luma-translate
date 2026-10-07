@@ -336,7 +336,7 @@ final class AppModel: ObservableObject {
             try mouse.start()
             cursorBadge.start()
             gestureEnabled = true
-            statusMessage = "全局手势已开启 · 右键双击点译 · 长按右键后拖拽译句"
+            statusMessage = "全局手势已开启 · 右键双击点译 · 按住右键直接拖拽框选"
         } catch {
             setError(error.localizedDescription)
         }

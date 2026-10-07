@@ -63,6 +63,13 @@ enum GestureRuntimeVerification {
         try await waitForText("significant")
         let card=try popup()
         try render(card,"popup-default")
+        func findScrollView(_ view:NSView)->NSScrollView? {
+            if let scroll=view as? NSScrollView { return scroll }
+            for child in view.subviews { if let scroll=findScrollView(child) { return scroll } }
+            return nil
+        }
+        guard let reader=findScrollView(card.contentView!) else { throw LumaError.message("Missing scrollable reading area") }
+        let beforeScroll=reader.contentView.bounds.origin.y
         let inside=CGPoint(x:card.frame.minX+90,y:CGDisplayBounds(CGMainDisplayID()).height-card.frame.maxY+170)
         post(.leftMouseDown,inside,.left); try await pause(60); post(.leftMouseUp,inside,.left)
         try await pause(250)
@@ -71,6 +78,11 @@ enum GestureRuntimeVerification {
         scroll.location=inside; scroll.post(tap:.cghidEventTap)
         try await pause(400)
         guard card.isVisible else { throw LumaError.message("Scrolling dismissed the popup") }
+        guard abs(reader.contentView.bounds.origin.y-beforeScroll)>20 else { throw LumaError.message("Popup contents did not scroll") }
+        let visibleBottom=reader.contentView.documentVisibleRect.maxY
+        guard let document=reader.documentView, visibleBottom>=document.bounds.maxY-2 else {
+            throw LumaError.message("The end of the popup content is not reachable")
+        }
         try render(card,"popup-scrolled")
         card.setContentSize(NSSize(width:740,height:700))
         try await pause(250)
@@ -86,7 +98,7 @@ enum GestureRuntimeVerification {
         let selectionCard=try popup()
         try render(selectionCard,"popup-drag")
         let checks=["Real global right-double-click -> screen capture -> Vision -> significant -> popup over a covered Luma main window",
-                    "Click and scroll inside popup keep it visible; native popup default and resized rendering",
+                    "Click keeps popup visible; real scrolling reaches final content; native default and resized rendering",
                     "Immediate right-drag without API key -> screen capture -> confidence interval -> offline popup"]
         try JSONSerialization.data(withJSONObject:["passed":true,"checks":checks],options:[.prettyPrinted,.sortedKeys]).write(to:directory.appendingPathComponent("gestures.json"))
         return checks

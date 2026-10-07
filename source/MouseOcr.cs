@@ -130,7 +130,6 @@ namespace SGFloatingTranslator
         private uint firstRightDownTime;
         private uint firstRightUpTime;
         private IntPtr firstRightTarget;
-        private bool longPressArmed;
         private int gestureGeneration;
         private System.Threading.Timer singleRightTimer;
         private System.Threading.Timer longPressTimer;
@@ -531,7 +530,6 @@ namespace SGFloatingTranslator
             firstRightDownTime = eventTime;
             firstRightUpTime = 0;
             firstRightTarget = GetRootWindowAt(point);
-            longPressArmed = false;
             rightGestureState = RightGestureState.FirstDown;
             DisposeSingleRightTimerLocked();
             DisposeLongPressTimerLocked();
@@ -586,7 +584,6 @@ namespace SGFloatingTranslator
                 if (disposed || !enabled || !selectionGestureEnabled ||
                     generation != gestureGeneration ||
                     rightGestureState != RightGestureState.FirstDown) return;
-                longPressArmed = true;
                 start = firstRightPoint;
                 current = latestRightPoint;
                 if (HasExceededSystemDragThreshold(start, current))
@@ -620,8 +617,8 @@ namespace SGFloatingTranslator
 
         internal static bool HasExceededSystemDragThreshold(Point first, Point second)
         {
-            int width = Math.Max(4, GetSystemMetrics(68));  // SM_CXDRAG
-            int height = Math.Max(4, GetSystemMetrics(69)); // SM_CYDRAG
+            int width = Math.Max(12, GetSystemMetrics(68));  // SM_CXDRAG; tolerate click jitter.
+            int height = Math.Max(12, GetSystemMetrics(69)); // SM_CYDRAG
             return Math.Abs(first.X - second.X) > width / 2 ||
                    Math.Abs(first.Y - second.Y) > height / 2;
         }
@@ -685,7 +682,6 @@ namespace SGFloatingTranslator
             firstRightPoint = Point.Empty;
             latestRightPoint = Point.Empty;
             firstRightTarget = IntPtr.Zero;
-            longPressArmed = false;
             CancelGestureTimersLocked();
         }
 
@@ -2260,7 +2256,7 @@ namespace SGFloatingTranslator
             definitionReader.BackColor = UiPalette.Card;
             definitionReader.ForeColor = UiPalette.Ink;
             definitionReader.Font = new Font("Microsoft YaHei UI", 11.5F, FontStyle.Regular);
-            definitionReader.ScrollBars = RichTextBoxScrollBars.Vertical;
+            definitionReader.ScrollBars = RichTextBoxScrollBars.ForcedVertical;
             definitionReader.DetectUrls = false;
             definitionReader.AccessibleName = "完整释义、英文解释、例句与学术语境（可滚动）";
             Controls.Add(definitionReader);

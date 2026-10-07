@@ -90,6 +90,14 @@ namespace SGFloatingTranslator
                 Settle();
                 Check(Field<Label>(popup, "usageLabel").Text.Contains("长期覆盖率"), "academic notes reach popup");
                 Save(popup, output, "windows-popup-academic");
+                RichTextBox reader = Field<RichTextBox>(popup, "definitionReader");
+                Check(reader.Text.Contains(academic.AcademicNotes), "reader retains full academic notes");
+                reader.Select(reader.TextLength - 1, 0);
+                reader.ScrollToCaret();
+                Settle();
+                Point lastCharacter = reader.GetPositionFromCharIndex(reader.TextLength - 1);
+                Check(reader.ClientRectangle.Contains(lastCharacter), "last character is reachable by scrolling");
+                Save(popup, output, "windows-popup-scrolled");
                 popup.Hide();
             }
             Console.WriteLine("UI checks: " + (failures == 0 ? "PASS" : "FAIL " + failures));
@@ -143,7 +151,8 @@ namespace SGFloatingTranslator
                         range.Area.Right = (int)(rich.Width * 1440F / dpi);
                         range.Area.Bottom = (int)(rich.Height * 1440F / dpi);
                         range.Page = range.Area;
-                        range.Chars.Min = 0; range.Chars.Max = -1;
+                        range.Chars.Min = rich.GetCharIndexFromPosition(new Point(1, 1));
+                        range.Chars.Max = -1;
                         try { RenderRichText(rich.Handle, 0x0439, new IntPtr(1), ref range); }
                         finally
                         {

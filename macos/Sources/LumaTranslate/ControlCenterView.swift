@@ -133,7 +133,7 @@ private struct GestureRail: View {
 
             VStack(alignment: .leading, spacing: 11) {
                 GestureHint(symbol: "computermouse.fill", title: "右键双击", detail: "鼠标所在单词 · 离线点译")
-                GestureHint(symbol: "selection.pin.in.out", title: "长按后拖拽", detail: "框选完整句子 · 可选 AI")
+                GestureHint(symbol: "selection.pin.in.out", title: "按住右键拖拽", detail: "框选词语与句子 · 可选 AI")
             }
 
             Spacer(minLength: 0)

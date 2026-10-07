@@ -7,7 +7,9 @@
 - Windows 10 2004+ / Windows 11 x64：运行 `Luma-Translate-Windows-1.1.1-Setup.exe`。需要 .NET Framework 4.8 和系统英文 OCR 组件。
 - macOS 13+：打开通用版 DMG，将应用拖入 Applications。支持 Apple Silicon（包括 M1）与 Intel。
 - 右键双击英文进行离线取词；输入或粘贴单词、短语、谚语也可查询。
-- 配置 DeepSeek / Gemini 并同意发送英文后，可使用 AI 详解和右键长按框选。短语块返回详细解释；超过 30 个英文词的框选内容使用整句翻译。
+- 按住右键直接拖拽可框选词语、短语与句子，不需要等候长按，也不需要配置密钥。本地未收录的整句仅提供明确标注的逐词参考。
+- 配置 DeepSeek / Gemini 并同意发送英文后，可使用 AI 详解和框选整句翻译。短语块返回详细解释；超过 30 个英文词的框选内容使用整句翻译。
+- 释义浮窗使用较大字号、独立滚动区与“展开阅读”入口；Mac 浮窗可拖动、调整大小，点击内部不会关闭。
 - Mac 首次屏幕取词需要辅助功能与屏幕录制权限。详见 `INSTALL.txt`。
 
 本构建未使用商业 Windows 代码签名证书，macOS 使用 ad-hoc 签名且未经过 Apple 公证。首次打开可能需要通过系统对本应用的来源确认。
@@ -47,6 +49,6 @@ bash macos/scripts/verify-runtime.sh
 python source/build_dictionary.py /path/to/ecdict.csv --source-commit COMMIT_SHA
 ```
 
-Windows 核心/界面测试使用真实控件与本机 OCR 引擎；macOS 构建对 Universal 二进制执行架构和签名验证，并从 DMG 复制后执行原生窗口、查询、关闭重开及 Vision OCR 检查。完整手势、麦克风无关的本地朗读听感、第三方 API 实际语义质量不由构建测试保证。
+Windows 核心/界面测试覆盖手势状态转换、系统 OCR 引擎与真实控件，并检查释义末尾能通过滚动到达。macOS 从 DMG 复制安装后，在 Apple Silicon 与 Intel 运行相同通用包：对另一应用的测试文档发送实际全局右键双击、直接右键拖拽和滚轮事件，验证截图、Vision OCR、离线查询、浮窗、内部点击及滚动到末尾。Windows 全局右键手势仍需在目标设备实测；构建测试也不保证第三方 API 的实际语义质量。用户设备需自行授予系统权限。
 
 通过 `.github/workflows/verify-mist-ui.yml` 在新分支构建安装包；主分支和旧发行版保留。

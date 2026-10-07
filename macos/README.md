@@ -17,7 +17,7 @@
 保留的主要能力：
 
 - **右键双击**：截取鼠标附近的小区域，以 Apple Vision 在本机 OCR，再查本地 ECDICT 词典。
-- **右键长按约 420 ms 后拖拽**：框选英文句子，在本机 OCR 后交给用户选择的 DeepSeek 或 Gemini；未配置 Key 时不联网。
+- **按住右键直接拖拽**：立即框选词语或句子，在本机 OCR 后查离线词库；配置 Key 且已同意联网后，可使用 DeepSeek 或 Gemini 翻译整句。
 - **普通右键单击**：等待系统双击间隔后原样回放，仍会打开原应用的上下文菜单。
 - **本地朗读**：使用 macOS 内置英语声音，不上传文字。
 - **安全存储**：API Key 存在 macOS 钥匙串；请求只允许固定 HTTPS 主机，拒绝 HTTP 重定向。
@@ -31,7 +31,7 @@
 
 ## 安装包与 GitHub Actions
 
-本次交付提供 `Luma-Translate-macOS-Universal-1.1.0.dmg`，打开后拖入 Applications 即可安装，M1 无需 Rosetta。
+本次交付提供 `Luma-Translate-macOS-Universal-1.1.1.dmg`，打开后拖入 Applications 即可安装，M1 无需 Rosetta。
 
 在仓库根目录执行 `.github/workflows/verify-mist-ui.yml`（Actions 中名称为 **Build and verify Luma desktop installers**）。`Luma-macOS-Universal` artifact 包含 DMG、应用 ZIP 和 Apple Silicon 验证记录；`Luma-macOS-Intel-verification` 包含同一安装包的 Intel 运行结果。这个验证工作流不会自动发布 Release。
 

@@ -78,7 +78,9 @@ namespace SGFloatingTranslator
                 up.Invoke(mouse, new object[] { new Point(280, 140), (uint)1150 });
                 Check("Right drag release resets state", state.GetValue(mouse).ToString() == "Idle");
                 down.Invoke(mouse, new object[] { new Point(100, 100), (uint)2000 });
-                up.Invoke(mouse, new object[] { new Point(100, 100), (uint)2070 });
+                move.Invoke(mouse, new object[] { new Point(104, 102) });
+                up.Invoke(mouse, new object[] { new Point(104, 102), (uint)2070 });
+                Check("Click jitter is not mistaken for selection", state.GetValue(mouse).ToString() == "WaitingForSecondDown");
                 down.Invoke(mouse, new object[] { new Point(104, 102), (uint)2140 });
                 Check("Right double click tolerates small hand movement", state.GetValue(mouse).ToString() == "SecondDown");
             }

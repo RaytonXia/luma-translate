@@ -74,7 +74,7 @@ final class ScreenOCRService: @unchecked Sendable {
         try await Task.detached(priority: .userInitiated) {
             let standardized = selection.standardized
             guard standardized.width >= 12, standardized.height >= 8 else {
-                throw LumaError.message("框选区域太小，请长按右键后拖过完整句子。 / The selection is too small.")
+                throw LumaError.message("框选区域太小，请按住右键拖过完整的英文词语或句子。 / The selection is too small.")
             }
             let image = try Self.capture(region: standardized)
             return try Self.selectionText(in: image)

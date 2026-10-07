@@ -1754,7 +1754,7 @@ namespace SGFloatingTranslator
             detailsBox.ForeColor = UiPalette.Ink;
             detailsBox.Font = new Font("Microsoft YaHei UI", 9.6F, FontStyle.Regular);
             detailsBox.ScrollBars = RichTextBoxScrollBars.Vertical;
-            detailsBox.Text = "右键双击：本地 OCR 取词；普通右键仍保留原功能。\r\n配置 AI 后，可右键长按并拖拽翻译长句；截图不会上传。";
+            detailsBox.Text = "右键双击英文取词；按住右键直接拖拽框选语块。普通右键仍保留原功能。\r\n无需密钥即可查看本地释义；配置 AI 后可翻译完整句子。截图不会上传。";
             detailsBox.AccessibleName = "词性、英文解释与学术用法 Details";
             resultLayout.Controls.Add(detailsBox, 0, 2);
             FlowLayoutPanel resultActions = new FlowLayoutPanel();
@@ -2012,7 +2012,7 @@ namespace SGFloatingTranslator
         {
             if (trayIcon == null) return;
             trayIcon.BalloonTipTitle = "Luma Translate 已在后台运行";
-            trayIcon.BalloonTipText = "右键双击英文即可翻译；普通右键仍可使用。配置 AI 后可长按拖拽翻译长句。";
+            trayIcon.BalloonTipText = "右键双击英文取词；按住右键直接拖拽可框选语块，无需 AI 密钥。普通右键仍可使用。";
             trayIcon.BalloonTipIcon = ToolTipIcon.None;
             trayIcon.ShowBalloonTip(3500);
         }
@@ -2122,8 +2122,6 @@ namespace SGFloatingTranslator
         private void RefreshAiGestureAvailability()
         {
             if (mouseController == null) return;
-            string provider;
-            string host;
             mouseController.SelectionGestureEnabled = true;
         }
 
