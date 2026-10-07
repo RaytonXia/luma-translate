@@ -97,9 +97,19 @@ enum GestureRuntimeVerification {
         try await waitForText("confidence interval")
         let selectionCard=try popup()
         try render(selectionCard,"popup-drag")
+        // Dragging horizontally through a line must not produce a zero-height crop.
+        post(.leftMouseDown,point("word"),.left); post(.leftMouseUp,point("word"),.left)
+        try await pause(150)
+        model.currentResult=nil
+        post(.rightMouseDown,point("lineStart")); try await pause(60)
+        post(.rightMouseDragged,point("lineEnd")); try await pause(160)
+        post(.rightMouseUp,point("lineEnd"))
+        try await waitForText("confidence interval")
+        try render(try popup(),"popup-horizontal-drag")
         let checks=["Real global right-double-click -> screen capture -> Vision -> significant -> popup over a covered Luma main window",
                     "Click keeps popup visible; real scrolling reaches final content; native default and resized rendering",
-                    "Immediate right-drag without API key -> screen capture -> confidence interval -> offline popup"]
+                    "Immediate right-drag without API key -> screen capture -> confidence interval -> offline popup",
+                    "Horizontal right-drag with zero vertical movement -> complete text band -> confidence interval -> offline popup"]
         try JSONSerialization.data(withJSONObject:["passed":true,"checks":checks],options:[.prettyPrinted,.sortedKeys]).write(to:directory.appendingPathComponent("gestures.json"))
         return checks
     }

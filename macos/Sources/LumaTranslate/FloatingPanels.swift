@@ -102,10 +102,10 @@ final class SelectionOverlayController {
         let quartzRect = CGRect(
             x: min(start.x, current.x),
             y: min(start.y, current.y),
-            width: max(4, abs(current.x - start.x)),
-            height: max(4, abs(current.y - start.y))
+            width: abs(current.x - start.x),
+            height: abs(current.y - start.y)
         )
-        let rect = ScreenCoordinates.appKitRect(fromQuartz: quartzRect).insetBy(dx: -4, dy: -4)
+        let rect = ScreenCoordinates.appKitRect(fromQuartz: ScreenOCRService.selectionCaptureRegion(quartzRect))
         panel.setFrame(rect, display: true)
         panel.orderFrontRegardless()
     }

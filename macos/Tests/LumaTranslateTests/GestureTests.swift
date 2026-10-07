@@ -3,6 +3,16 @@ import AppKit
 @testable import LumaTranslate
 
 final class GestureTests: XCTestCase {
+    func testHorizontalSelectionRetainsTextHeight() {
+        let forward=ScreenOCRService.selectionCaptureRegion(CGRect(x:20,y:100,width:280,height:0))
+        let reverse=ScreenOCRService.selectionCaptureRegion(CGRect(x:300,y:100,width:-280,height:0))
+        XCTAssertEqual(forward,reverse)
+        XCTAssertEqual(forward.midY,100)
+        XCTAssertGreaterThanOrEqual(forward.height,40)
+        XCTAssertTrue(forward.contains(CGPoint(x:25,y:85)))
+        XCTAssertTrue(forward.contains(CGPoint(x:295,y:115)))
+    }
+
     func testCoveredOwnWindowDoesNotBlockDocument() {
         func item(_ pid:Int,_ number:Int)->[String:Any] {
             [kCGWindowOwnerPID as String:pid,kCGWindowNumber as String:number,

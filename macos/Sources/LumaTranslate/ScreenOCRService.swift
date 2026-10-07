@@ -73,12 +73,19 @@ final class ScreenOCRService: @unchecked Sendable {
     func recognizeSelection(in selection: CGRect) async throws -> String {
         try await Task.detached(priority: .userInitiated) {
             let standardized = selection.standardized
-            guard standardized.width >= 12, standardized.height >= 8 else {
+            guard standardized.width >= 12 else {
                 throw LumaError.message("框选区域太小，请按住右键拖过完整的英文词语或句子。 / The selection is too small.")
             }
-            let image = try Self.capture(region: standardized)
+            let image = try Self.capture(region: Self.selectionCaptureRegion(standardized))
             return try Self.selectionText(in: image)
         }.value
+    }
+
+    static func selectionCaptureRegion(_ selection: CGRect) -> CGRect {
+        let rect = selection.standardized
+        // A natural drag across a text line often has zero height. Keep the
+        // complete glyph band visible and use this same rectangle for the overlay.
+        return rect.insetBy(dx: -6, dy: -max(4, (40 - rect.height) / 2))
     }
 
     private static func captureRegion(around point: CGPoint) throws -> CGRect {

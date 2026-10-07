@@ -24,7 +24,8 @@ DispatchQueue.main.asyncAfter(deadline:.now()+0.5) {
         let screen=window.convertPoint(toScreen:view.convert(p,to:nil))
         return ["x":Double(screen.x),"y":Double(CGDisplayBounds(CGMainDisplayID()).height-screen.y)]
     }
-    let coordinates=["word":quartz(NSPoint(x:124,y:99)),"start":quartz(NSPoint(x:24,y:170)),"end":quartz(NSPoint(x:365,y:216))]
+    let coordinates=["word":quartz(NSPoint(x:124,y:99)),"start":quartz(NSPoint(x:24,y:170)),"end":quartz(NSPoint(x:365,y:216)),
+                     "lineStart":quartz(NSPoint(x:24,y:195)),"lineEnd":quartz(NSPoint(x:365,y:195))]
     let data=try! JSONSerialization.data(withJSONObject:coordinates)
     try! data.write(to:URL(fileURLWithPath:CommandLine.arguments[1]))
 }
