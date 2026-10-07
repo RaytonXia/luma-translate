@@ -1,4 +1,4 @@
-Luma Translate 1.1.0
+Luma Translate 1.1.1
 
 Windows：Windows 10 2004 或更高版本 / Windows 11，x64，.NET Framework 4.8。
 运行 Setup，安装后从开始菜单打开 Luma Translate。关闭窗口后仍在托盘运行；在托盘菜单选择“退出”即可退出。安装到当前用户目录，无需管理员权限。

@@ -45,6 +45,7 @@ namespace SGFloatingTranslator
             TestMouseOcrUtilities(offline);
             TestBitmapOcr(offline);
             TestSelectionGestureUtilities();
+            TestRightGestureStateTransitions();
 
             Check("Gemini fixed HTTPS endpoint", GeminiTranslator.BuildEndpoint() == "https://generativelanguage.googleapis.com/v1beta/interactions");
             TestGeminiRequest();
@@ -57,6 +58,30 @@ namespace SGFloatingTranslator
 
             Console.WriteLine(failures == 0 ? "ALL TESTS PASSED" : failures + " TEST(S) FAILED");
             return failures == 0 ? 0 : 1;
+        }
+
+        private static void TestRightGestureStateTransitions()
+        {
+            using (System.Windows.Forms.Control owner = new System.Windows.Forms.Control())
+            using (TranslationMouseController mouse = new TranslationMouseController(owner))
+            {
+                Type type = typeof(TranslationMouseController);
+                BindingFlags flags = BindingFlags.Instance | BindingFlags.NonPublic;
+                MethodInfo down = type.GetMethod("HandleRightButtonDown", flags);
+                MethodInfo up = type.GetMethod("HandleRightButtonUp", flags);
+                MethodInfo move = type.GetMethod("HandleRightGestureMove", flags);
+                FieldInfo state = type.GetField("rightGestureState", flags);
+                Check("Right drag enabled without API key", mouse.SelectionGestureEnabled);
+                down.Invoke(mouse, new object[] { new Point(100, 100), (uint)1000 });
+                move.Invoke(mouse, new object[] { new Point(280, 140) });
+                Check("Immediate right drag enters selection without hold delay", state.GetValue(mouse).ToString() == "LongDragging");
+                up.Invoke(mouse, new object[] { new Point(280, 140), (uint)1150 });
+                Check("Right drag release resets state", state.GetValue(mouse).ToString() == "Idle");
+                down.Invoke(mouse, new object[] { new Point(100, 100), (uint)2000 });
+                up.Invoke(mouse, new object[] { new Point(100, 100), (uint)2070 });
+                down.Invoke(mouse, new object[] { new Point(104, 102), (uint)2140 });
+                Check("Right double click tolerates small hand movement", state.GetValue(mouse).ToString() == "SecondDown");
+            }
         }
 
         private static void TestAcademicCoverage(OfflineDictionaryTranslator offline)

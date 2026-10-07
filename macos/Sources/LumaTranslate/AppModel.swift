@@ -298,7 +298,10 @@ final class AppModel: ObservableObject {
             self?.gestureVisualState = state
             self?.cursorBadge.setState(state)
         }
-        mouse.onLeftMouseDown = { [weak self] in self?.popup.hide() }
+        mouse.onLeftMouseDown = { [weak self] point in
+            guard let self, !self.popup.contains(quartzPoint: point) else { return }
+            self.popup.hide()
+        }
         mouse.onPointGesture = { [weak self] point in self?.recognizePoint(at: point) }
         mouse.onSelectionBegan = { [weak self] point in self?.selectionOverlay.show(start: point, current: point) }
         mouse.onSelectionChanged = { [weak self] start, current in
@@ -327,7 +330,7 @@ final class AppModel: ObservableObject {
 
     private func startGestureIfPossible(force: Bool = false) {
         refreshPermissions()
-        let wantsGesture = force || defaults.bool(forKey: Keys.wantsGesture)
+        let wantsGesture = force || (defaults.object(forKey: Keys.wantsGesture) == nil || defaults.bool(forKey: Keys.wantsGesture))
         guard wantsGesture, accessibilityGranted, screenCaptureGranted, !gestureEnabled else { return }
         do {
             try mouse.start()
@@ -407,7 +410,19 @@ final class AppModel: ObservableObject {
                 guard !Task.isCancelled else { return }
                 self.cursorBadge.restoreAfterCapture()
                 self.inputText = text
-                self.requestAI(text: text, sentenceOnly: TextLogic.englishWords(in: text).count > 30, popupAnchor: anchor)
+                if self.providerHasKey, self.hasCloudConsent(for: self.provider) {
+                    self.requestAI(text: text, sentenceOnly: TextLogic.englishWords(in: text).count > 30, popupAnchor: anchor)
+                } else if let dictionary = self.dictionary {
+                    let result = try await Task.detached(priority: .userInitiated) { try dictionary.translate(text) }.value
+                    guard !Task.isCancelled else { return }
+                    self.currentResult = result
+                    self.statusMessage = "框选已识别 · 本地释义；需要整句翻译时可点击 AI 详解"
+                    self.popup.showResult(result, at: anchor,
+                        onSpeak: { [weak self] in self?.speak(text) },
+                        onAI: { [weak self] in self?.requestAI(text: text, sentenceOnly: TextLogic.englishWords(in: text).count > 30, popupAnchor: anchor) })
+                } else {
+                    throw LumaError.message("框选已识别，本地词典仍在加载，请稍后重试。")
+                }
             } catch is CancellationError {
                 self?.cursorBadge.restoreAfterCapture()
             } catch {
@@ -538,10 +553,10 @@ final class AppModel: ObservableObject {
     }
 
     private func isInsideOwnInteractiveWindow(quartzPoint: CGPoint) -> Bool {
-        let point = ScreenCoordinates.appKitPoint(fromQuartz: quartzPoint)
-        return NSApp.windows.contains { window in
-            window.isVisible && !window.ignoresMouseEvents && window.frame.contains(point)
-        }
+        let interactive = Set(NSApp.windows.filter { $0.isVisible && !$0.ignoresMouseEvents }.map(\.windowNumber))
+        guard let windows = CGWindowListCopyWindowInfo([.optionOnScreenOnly, .excludeDesktopElements], kCGNullWindowID) as? [[String: Any]] else { return false }
+        return WindowHitTesting.isOwnInteractiveWindow(at: quartzPoint, windows: windows,
+            ownPID: ProcessInfo.processInfo.processIdentifier, interactiveNumbers: interactive)
     }
 
     private func openPrivacySettings(section: String) {

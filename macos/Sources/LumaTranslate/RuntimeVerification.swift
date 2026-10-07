@@ -75,12 +75,13 @@ enum RuntimeVerification {
                 throw LumaError.message("Production Vision OCR returned: \(recognized)")
             }
             checks.append("Production Vision OCR on rendered English bitmap: \(recognized)")
+            checks += try await GestureRuntimeVerification.run(model: model, directory: directory)
             let report: [String: Any] = [
                 "passed": true, "os": ProcessInfo.processInfo.operatingSystemVersionString,
                 "verificationSeconds": Date().timeIntervalSince(started),
                 "dictionaryReadySeconds": dictionaryReadySeconds,
                 "checks": checks, "bundle": Bundle.main.bundleIdentifier ?? "",
-                "notes": "Global mouse gestures and user-granted screen capture permissions need an interactive user session. No cloud API request was made."
+                "notes": "Global gestures exercised on an external controlled document with existing runner permissions. User devices still require their own OS permissions. No cloud API request was made."
             ]
             try JSONSerialization.data(withJSONObject: report, options: [.prettyPrinted, .sortedKeys])
                 .write(to: directory.appendingPathComponent("runtime.json"))

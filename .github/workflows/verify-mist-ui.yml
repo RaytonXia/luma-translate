@@ -15,7 +15,7 @@ jobs:
         run: swift test --package-path macos
       - name: Build and verify both architectures
         env:
-          LUMA_VERSION: 1.1.0
+          LUMA_VERSION: 1.1.1
           LUMA_BUILD_NUMBER: ${{ github.run_number }}
         run: bash macos/scripts/build-universal.sh
       - name: Run installed universal app

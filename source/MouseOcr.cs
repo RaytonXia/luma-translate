@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Diagnostics;
@@ -123,7 +123,7 @@ namespace SGFloatingTranslator
         private IntPtr hookHandle;
         private volatile bool enabled;
         private volatile bool disposed;
-        private volatile bool aiLongSentenceEnabled;
+        private volatile bool selectionGestureEnabled = true;
         private RightGestureState rightGestureState;
         private Point firstRightPoint;
         private Point latestRightPoint;
@@ -160,13 +160,12 @@ namespace SGFloatingTranslator
         }
 
         /// <summary>
-        /// Enables the right-hold-and-drag sentence gesture. The host sets this only when the
-        /// preferred AI provider has both a key and explicit destination consent.
+        /// Enables local right-drag OCR. Network translation remains a separate, consented action.
         /// </summary>
-        public bool AiLongSentenceEnabled
+        public bool SelectionGestureEnabled
         {
-            get { return aiLongSentenceEnabled; }
-            set { aiLongSentenceEnabled = value; }
+            get { return selectionGestureEnabled; }
+            set { selectionGestureEnabled = value; }
         }
 
         /// <summary>
@@ -414,7 +413,7 @@ namespace SGFloatingTranslator
                     latestRightPoint = point;
                     uint heldMilliseconds = unchecked(eventTime - firstRightDownTime);
                     bool draggedFarEnough = HasExceededSystemDragThreshold(firstRightPoint, point);
-                    if (aiLongSentenceEnabled && heldMilliseconds >= LongPressMilliseconds && draggedFarEnough)
+                    if (selectionGestureEnabled && draggedFarEnough)
                     {
                         selectionStart = firstRightPoint;
                         selectionEnd = point;
@@ -491,7 +490,7 @@ namespace SGFloatingTranslator
                 else if (rightGestureState == RightGestureState.FirstDown)
                 {
                     latestRightPoint = point;
-                    if (longPressArmed && aiLongSentenceEnabled &&
+                    if (selectionGestureEnabled &&
                         HasExceededSystemDragThreshold(firstRightPoint, point))
                     {
                         rightGestureState = RightGestureState.LongDragging;
@@ -536,7 +535,7 @@ namespace SGFloatingTranslator
             rightGestureState = RightGestureState.FirstDown;
             DisposeSingleRightTimerLocked();
             DisposeLongPressTimerLocked();
-            if (aiLongSentenceEnabled)
+            if (selectionGestureEnabled)
             {
                 int generation = gestureGeneration;
                 longPressTimer = new System.Threading.Timer(
@@ -584,7 +583,7 @@ namespace SGFloatingTranslator
             Point current = Point.Empty;
             lock (gestureLock)
             {
-                if (disposed || !enabled || !aiLongSentenceEnabled ||
+                if (disposed || !enabled || !selectionGestureEnabled ||
                     generation != gestureGeneration ||
                     rightGestureState != RightGestureState.FirstDown) return;
                 longPressArmed = true;
@@ -613,8 +612,8 @@ namespace SGFloatingTranslator
 
         internal static bool IsWithinDoubleClickDistance(Point first, Point second)
         {
-            int width = Math.Max(4, GetSystemMetrics(36));  // SM_CXDOUBLECLK
-            int height = Math.Max(4, GetSystemMetrics(37)); // SM_CYDOUBLECLK
+            int width = Math.Max(12, GetSystemMetrics(36));  // SM_CXDOUBLECLK
+            int height = Math.Max(12, GetSystemMetrics(37)); // SM_CYDOUBLECLK
             return Math.Abs(first.X - second.X) <= width / 2 &&
                    Math.Abs(first.Y - second.Y) <= height / 2;
         }
@@ -629,7 +628,7 @@ namespace SGFloatingTranslator
 
         private static int GetDoubleClickWindowMilliseconds()
         {
-            return Math.Max(250, Math.Min(650, unchecked((int)GetDoubleClickTime())));
+            return Math.Max(250, unchecked((int)GetDoubleClickTime()));
         }
 
         private static IntPtr GetRootWindowAt(Point point)
@@ -819,7 +818,7 @@ namespace SGFloatingTranslator
 
         private void ShowSelectionOverlay(Point start, Point current)
         {
-            if (disposed || !enabled || !aiLongSentenceEnabled) return;
+            if (disposed || !enabled || !selectionGestureEnabled) return;
             if (selectionOverlay == null || selectionOverlay.IsDisposed)
                 selectionOverlay = new AiSelectionOverlay();
             selectionOverlay.ShowSelection(start, current);
@@ -839,7 +838,7 @@ namespace SGFloatingTranslator
         private void FinishSelectionGesture(Point start, Point end)
         {
             if (selectionOverlay != null && !selectionOverlay.IsDisposed) selectionOverlay.Hide();
-            if (disposed || !enabled || !aiLongSentenceEnabled)
+            if (disposed || !enabled || !selectionGestureEnabled)
             {
                 SetBadgeState(CursorBadgeState.Ready);
                 return;
@@ -860,7 +859,7 @@ namespace SGFloatingTranslator
 
         private async void StartSelectionRecognition(Rectangle selection, Point anchor)
         {
-            if (disposed || !enabled || !aiLongSentenceEnabled) return;
+            if (disposed || !enabled || !selectionGestureEnabled) return;
 
             unchecked { recognitionGeneration++; }
             int generation = recognitionGeneration;
@@ -2060,7 +2059,7 @@ namespace SGFloatingTranslator
     /// </summary>
     public sealed class QuickTranslationPopup : Form
     {
-        private const int LogicalWidth = 412;
+        private const int LogicalWidth = 560;
         private const int LogicalTailHeight = 9;
         private const int WmDpiChanged = 0x02E0;
         private const uint MonitorDefaultToNearest = 2;
@@ -2097,6 +2096,7 @@ namespace SGFloatingTranslator
         private Rectangle dividerBounds;
         private int currentDpi = 96;
         private bool wideLayout;
+        private Rectangle availableArea;
         private int tailCentre;
         private bool tailOnTop;
         private bool aiBusy;
@@ -2165,7 +2165,7 @@ namespace SGFloatingTranslator
             sourceLabel.Font = new Font("Georgia", 22F, FontStyle.Regular);
             sourceLabel.AccessibleName = "英文单词";
 
-            phoneticLabel = CreateLabel("Phonetic", 9.0F, FontStyle.Regular, UiPalette.Muted);
+            phoneticLabel = CreateLabel("Phonetic", 11.0F, FontStyle.Regular, UiPalette.Muted);
             phoneticLabel.AccessibleName = "音标";
 
             partOfSpeechPill = new PillLabel();
@@ -2202,18 +2202,18 @@ namespace SGFloatingTranslator
             speakButton = CreateButton("听", "朗读英文单词", ButtonTone.Glass);
             explainButton = CreateButton("听解释", "朗读英文解释", ButtonTone.Glass);
             aiButton = CreateButton("AI 详解", "使用已配置的 AI 生成释义与学术用法", ButtonTone.Accent);
-            moreButton = CreateButton("详细", "在完整窗口中查看详细内容", ButtonTone.Glass);
+            moreButton = CreateButton("展开阅读", "在完整窗口中查看详细内容", ButtonTone.Glass);
             pauseButton = CreateButton("暂停", "暂停鼠标点译", ButtonTone.Glass);
             closeButton = CreateButton("关闭", "关闭这张词典卡片", ButtonTone.Glass);
 
             speakButton.Font = new Font("Segoe UI Symbol", 10.5F, FontStyle.Regular, GraphicsUnit.Point);
             partOfSpeechPill.Font = new Font("Segoe UI Semibold", 8.0F, FontStyle.Bold, GraphicsUnit.Point);
             providerPill.Font = new Font("Segoe UI Semibold", 7.0F, FontStyle.Bold, GraphicsUnit.Point);
-            explainButton.Font = new Font("Microsoft YaHei UI", 8.0F, FontStyle.Regular, GraphicsUnit.Point);
-            aiButton.Font = new Font("Microsoft YaHei UI", 8.5F, FontStyle.Bold, GraphicsUnit.Point);
-            moreButton.Font = new Font("Microsoft YaHei UI", 8.5F, FontStyle.Regular, GraphicsUnit.Point);
-            pauseButton.Font = new Font("Microsoft YaHei UI", 8.5F, FontStyle.Regular, GraphicsUnit.Point);
-            closeButton.Font = new Font("Microsoft YaHei UI", 8.5F, FontStyle.Regular, GraphicsUnit.Point);
+            explainButton.Font = new Font("Microsoft YaHei UI", 10.0F, FontStyle.Regular, GraphicsUnit.Point);
+            aiButton.Font = new Font("Microsoft YaHei UI", 10.0F, FontStyle.Bold, GraphicsUnit.Point);
+            moreButton.Font = new Font("Microsoft YaHei UI", 10.0F, FontStyle.Regular, GraphicsUnit.Point);
+            pauseButton.Font = new Font("Microsoft YaHei UI", 10.0F, FontStyle.Regular, GraphicsUnit.Point);
+            closeButton.Font = new Font("Microsoft YaHei UI", 10.0F, FontStyle.Regular, GraphicsUnit.Point);
             sourceLabel.TabIndex = 0;
             speakButton.TabIndex = 1;
             explainButton.TabIndex = 2;
@@ -2259,7 +2259,7 @@ namespace SGFloatingTranslator
             definitionReader.BorderStyle = BorderStyle.None;
             definitionReader.BackColor = UiPalette.Card;
             definitionReader.ForeColor = UiPalette.Ink;
-            definitionReader.Font = new Font("Microsoft YaHei UI", 9.5F, FontStyle.Regular);
+            definitionReader.Font = new Font("Microsoft YaHei UI", 11.5F, FontStyle.Regular);
             definitionReader.ScrollBars = RichTextBoxScrollBars.Vertical;
             definitionReader.DetectUrls = false;
             definitionReader.AccessibleName = "完整释义、英文解释、例句与学术语境（可滚动）";
@@ -2602,6 +2602,7 @@ namespace SGFloatingTranslator
             // which clips a physically sized bubble. Read the monitor work area from Win32 so
             // the anchor, form size, and boundary checks all use physical pixels.
             Rectangle area = GetPhysicalWorkingArea(point);
+            availableArea = area;
             bool firstShow = !Visible;
 
             // Moving the hidden/non-activating tool window first lets GetDpiForWindow
@@ -2718,10 +2719,11 @@ namespace SGFloatingTranslator
         private void ApplyContentLayout()
         {
             SuspendLayout();
-            int width = L(wideLayout ? 468 : LogicalWidth);
+            int width = L(wideLayout ? 620 : LogicalWidth);
+            if (availableArea.Width > 0) width = Math.Min(width, availableArea.Width - L(16));
             int tail = L(LogicalTailHeight);
             int bodyTop = tailOnTop ? tail : 0;
-            int pad = L(18);
+            int pad = L(24);
             int innerWidth = width - (pad * 2);
             int y = bodyTop + L(15);
 
@@ -2768,7 +2770,7 @@ namespace SGFloatingTranslator
             }
             if (definitionReader != null)
             {
-                string body = translationLabel.Text;
+                string body = (currentText != null && currentText.Length > 65 ? "英文原文\r\n" + currentText + "\r\n\r\n" : "") + translationLabel.Text;
                 if (showExplanation) body += "\r\n\r\n英文解释\r\n" + explanationLabel.Text;
                 if (showUsage) body += "\r\n\r\n用法与例句\r\n" + currentUsage.Trim();
                 if (definitionReader.Text != body)
@@ -2777,20 +2779,22 @@ namespace SGFloatingTranslator
                     definitionReader.SelectAll();
                     definitionReader.SelectionFont = definitionReader.Font;
                     definitionReader.SelectionColor = UiPalette.Ink;
-                    definitionReader.Select(0, translationLabel.Text.Length);
+                    definitionReader.Select(body.IndexOf(translationLabel.Text, StringComparison.Ordinal), translationLabel.Text.Length);
                     definitionReader.SelectionFont = translationLabel.Font;
                     definitionReader.SelectionColor = UiPalette.TealDark;
                     definitionReader.Select(0, 0);
                     definitionReader.ScrollToCaret();
                 }
-                int readerHeight = MeasureWrappedHeight(body, definitionReader.Font, innerWidth - L(18), 92, 300);
+                int maxReaderHeight = L(420);
+                if (availableArea.Height > 0) maxReaderHeight = Math.Min(maxReaderHeight, Math.Max(L(100), availableArea.Height - y - L(90)));
+                int readerHeight = Math.Min(maxReaderHeight, MeasureWrappedHeight(body, definitionReader.Font, innerWidth - L(18), 160, 420));
                 definitionReader.SetBounds(pad, y, innerWidth, readerHeight);
                 y += readerHeight + L(14);
             }
 
             int gap = L(6);
-            int buttonHeight = L(32);
-            int aiWidth = L(108);
+            int buttonHeight = L(38);
+            int aiWidth = L(118);
             int remaining = innerWidth - aiWidth - (gap * 3);
             int smallWidth = remaining / 3;
             aiButton.CornerRadius = L(11);

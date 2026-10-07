@@ -9,7 +9,7 @@ final class MouseGestureController {
     var onSelectionChanged: ((CGPoint, CGPoint) -> Void)?
     var onSelectionFinished: ((CGRect, CGPoint) -> Void)?
     var onVisualStateChanged: ((GestureVisualState) -> Void)?
-    var onLeftMouseDown: (() -> Void)?
+    var onLeftMouseDown: ((CGPoint) -> Void)?
     var shouldHandlePoint: ((CGPoint) -> Bool)?
 
     private enum State: Equatable {
@@ -31,6 +31,7 @@ final class MouseGestureController {
     private var replayWorkItem: DispatchWorkItem?
     private var firstDownPoint = CGPoint.zero
     private var firstDownTime: TimeInterval = 0
+    private var firstUpTime: TimeInterval = 0
     private var currentPoint = CGPoint.zero
 
     private(set) var isEnabled = false
@@ -113,10 +114,10 @@ final class MouseGestureController {
         return suppress ? nil : Unmanaged.passUnretained(event)
     }
 
-    private func handle(type: CGEventType, event: CGEvent) -> Bool {
+    func handle(type: CGEventType, event: CGEvent) -> Bool {
         switch type {
         case .leftMouseDown:
-            onLeftMouseDown?()
+            onLeftMouseDown?(event.location)
             return false
         case .rightMouseDown:
             return handleRightDown(event)
@@ -138,13 +139,12 @@ final class MouseGestureController {
 
         let now = ProcessInfo.processInfo.systemUptime
         if state == .awaitingSecondClick,
-           now - firstDownTime <= NSEvent.doubleClickInterval + 0.12,
+           now - firstUpTime <= NSEvent.doubleClickInterval + 0.12,
            hypot(point.x - firstDownPoint.x, point.y - firstDownPoint.y) <= doubleClickDistance {
             replayWorkItem?.cancel()
             replayWorkItem = nil
             state = .doubleClickDown
             setVisualState(.processing)
-            onPointGesture?(point)
             return true
         }
 
@@ -162,12 +162,14 @@ final class MouseGestureController {
             longPressWorkItem?.cancel()
             longPressWorkItem = nil
             state = .awaitingSecondClick
+            firstUpTime = ProcessInfo.processInfo.systemUptime
             setVisualState(.awaitingSecondClick)
             scheduleSingleClickReplay()
             return true
         case .doubleClickDown:
             state = .idle
             setVisualState(.processing)
+            onPointGesture?(currentPoint)
             return true
         case .selecting:
             let selection = CGRect(
@@ -191,6 +193,13 @@ final class MouseGestureController {
         currentPoint = event.location
         switch state {
         case .pendingDown:
+            if hypot(currentPoint.x - firstDownPoint.x, currentPoint.y - firstDownPoint.y) >= 6 {
+                longPressWorkItem?.cancel()
+                state = .selecting
+                setVisualState(.selecting)
+                onSelectionBegan?(firstDownPoint)
+                onSelectionChanged?(firstDownPoint, currentPoint)
+            }
             return true
         case .selecting:
             onSelectionChanged?(firstDownPoint, currentPoint)
@@ -211,6 +220,7 @@ final class MouseGestureController {
 
         let workItem = DispatchWorkItem { [weak self] in
             guard let self, self.state == .pendingDown else { return }
+            guard hypot(self.currentPoint.x - self.firstDownPoint.x, self.currentPoint.y - self.firstDownPoint.y) >= 6 else { return }
             self.state = .selecting
             self.setVisualState(.selecting)
             self.onSelectionBegan?(self.firstDownPoint)

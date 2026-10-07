@@ -1,4 +1,4 @@
-#define AppVersion "1.1.0"
+#define AppVersion "1.1.1"
 [Setup]
 AppId={{2EB9B990-70B5-4F87-ACB0-763F004BD1AD}
 AppName=Luma Translate
@@ -11,7 +11,7 @@ ArchitecturesAllowed=x64compatible
 ArchitecturesInstallIn64BitMode=x64compatible
 MinVersion=10.0.19041
 OutputDir=..\dist
-OutputBaseFilename=Luma-Translate-Windows-1.1.0-Setup
+OutputBaseFilename=Luma-Translate-Windows-1.1.1-Setup
 SetupIconFile=..\assets\luma-logo.ico
 UninstallDisplayIcon={app}\LumaTranslate.exe
 Compression=lzma2

@@ -7,10 +7,12 @@ mkdir -p "$VERIFY_DIR"
 # Intel downloads the ARM artifact, including its verification directory. Never
 # let those earlier results survive a failed verification on the current host.
 rm -f "$VERIFY_DIR/runtime.json" "$VERIFY_DIR/failure.txt" "$VERIFY_DIR/main.png" "$VERIFY_DIR/minimum.png"
-DMG="$DIST_DIR/Luma-Translate-macOS-Universal-1.1.0.dmg"
+DMG="$DIST_DIR/Luma-Translate-macOS-Universal-1.1.1.dmg"
 MOUNT_DIR="$ROOT_DIR/.build/verify-mount"
 INSTALL_DIR="$ROOT_DIR/.build/verify-install"
 mkdir -p "$MOUNT_DIR" "$INSTALL_DIR"
+swiftc "$ROOT_DIR/scripts/GestureFixture.swift" -o "$ROOT_DIR/.build/GestureFixture"
+export LUMA_GESTURE_FIXTURE="$ROOT_DIR/.build/GestureFixture"
 hdiutil attach -quiet -nobrowse -readonly -mountpoint "$MOUNT_DIR" "$DMG"
 trap 'hdiutil detach -quiet "$MOUNT_DIR" || true' EXIT
 test -L "$MOUNT_DIR/Applications"
@@ -23,7 +25,7 @@ uname -m >> "$VERIFY_DIR/system.txt"
 sysctl -n machdep.cpu.brand_string >> "$VERIFY_DIR/system.txt" || true
 "$APP/Contents/MacOS/LumaTranslate" --verify-runtime "$VERIFY_DIR" > "$VERIFY_DIR/runtime.log" 2>&1 &
 APP_PID=$!
-for i in {1..90}; do
+for i in {1..180}; do
   if ! kill -0 "$APP_PID" 2>/dev/null; then
     if ! wait "$APP_PID"; then
       sleep 3

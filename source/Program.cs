@@ -20,8 +20,8 @@ using System.Windows.Forms;
 
 [assembly: AssemblyTitle("Luma Translate")]
 [assembly: AssemblyProduct("Luma Translate")]
-[assembly: AssemblyVersion("1.1.0.0")]
-[assembly: AssemblyFileVersion("1.1.0.0")]
+[assembly: AssemblyVersion("1.1.1.0")]
+[assembly: AssemblyFileVersion("1.1.1.0")]
 
 namespace SGFloatingTranslator
 {
@@ -2124,7 +2124,7 @@ namespace SGFloatingTranslator
             if (mouseController == null) return;
             string provider;
             string host;
-            mouseController.AiLongSentenceEnabled = TryGetReadyPreferredAi(out provider, out host);
+            mouseController.SelectionGestureEnabled = true;
         }
 
         private void ProcessOcrSelection(OcrSelectionEventArgs selection)
@@ -2133,21 +2133,24 @@ namespace SGFloatingTranslator
             string text = TextLogic.NormaliseInput(selection.Text);
             string provider;
             string host;
-            if (!TryGetReadyPreferredAi(out provider, out host))
-            {
-                RefreshAiGestureAvailability();
-                const string unavailable =
-                    "右键长按拖拽仅在所选 AI 接口已配置并同意联网后启用。 / Configure and consent to the selected AI provider first.";
-                SetStatus(unavailable);
-                if (quickPopup != null) quickPopup.ShowMessage(unavailable, selection.ScreenPoint);
-                return;
-            }
             if (!TextLogic.IsEnglishInput(text) || text.Length > TextLogic.MaxInputCharacters)
             {
                 if (quickPopup != null)
                     quickPopup.ShowMessage(
                         "选区内没有可翻译的英文长句。 / No translatable English sentence was found.",
                         selection.ScreenPoint);
+                return;
+            }
+
+            if (!TryGetReadyPreferredAi(out provider, out host))
+            {
+                CancelActiveAiRequestForNewIntent();
+                lastOcrHit = null;
+                sourceBox.Text = text;
+                TranslateManualText();
+                if (currentResult != null && quickPopup != null)
+                    quickPopup.ShowResult(text, currentResult, text, selection.ScreenPoint);
+                SetStatus("框选已识别 · 本地释义；需要整句翻译时可点击 AI 详解");
                 return;
             }
 

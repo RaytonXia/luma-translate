@@ -1,10 +1,10 @@
-# Luma Translate 1.1.0
+# Luma Translate 1.1.1
 
 原生 Windows / macOS 即时英译中工具，采用雾白与鼠尾草绿界面。macOS 使用原生毛玻璃材质；Windows 使用清晰的浅色面板和圆角。保留原有蓝紫色双页、声波与点击星芒 Logo；Windows 主界面改用独立 512 px 图片，修复放大托盘小图标导致的模糊。品牌原图与图案保持不变，安装包包含 Windows 多尺寸 ICO 和 macOS ICNS。
 
 ## 安装与使用
 
-- Windows 10 2004+ / Windows 11 x64：运行 `Luma-Translate-Windows-1.1.0-Setup.exe`。需要 .NET Framework 4.8 和系统英文 OCR 组件。
+- Windows 10 2004+ / Windows 11 x64：运行 `Luma-Translate-Windows-1.1.1-Setup.exe`。需要 .NET Framework 4.8 和系统英文 OCR 组件。
 - macOS 13+：打开通用版 DMG，将应用拖入 Applications。支持 Apple Silicon（包括 M1）与 Intel。
 - 右键双击英文进行离线取词；输入或粘贴单词、短语、谚语也可查询。
 - 配置 DeepSeek / Gemini 并同意发送英文后，可使用 AI 详解和右键长按框选。短语块返回详细解释；超过 30 个英文词的框选内容使用整句翻译。

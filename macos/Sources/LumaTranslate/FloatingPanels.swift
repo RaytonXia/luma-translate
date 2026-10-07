@@ -213,18 +213,22 @@ private struct PopupSection: View {
 
     var body: some View {
         if !text.isEmpty {
-            VStack(alignment: .leading, spacing: 5) {
+            VStack(alignment: .leading, spacing: 9) {
                 Text(eyebrow.uppercased())
-                    .font(.system(size: 10, weight: .medium))
-                    .tracking(1.1)
+                    .font(.system(size: 12, weight: .semibold))
+                    .tracking(0.5)
                     .foregroundStyle(LumaPalette.violet)
                 Text(text)
-                    .font(.system(size: 13.5, weight: .regular))
+                    .font(.system(size: 16, weight: .regular))
+                    .lineSpacing(5)
+                    .fixedSize(horizontal: false, vertical: true)
                     .foregroundStyle(.primary)
                     .textSelection(.enabled)
                 if !secondary.isEmpty {
                     Text(secondary)
-                        .font(.system(size: 12.5))
+                        .font(.system(size: 15))
+                        .lineSpacing(5)
+                        .fixedSize(horizontal: false, vertical: true)
                         .foregroundStyle(.secondary)
                         .textSelection(.enabled)
                 }
@@ -240,6 +244,7 @@ private struct QuickPopupView: View {
     let onSpeak: () -> Void
     let onCopy: () -> Void
     let onAI: (() -> Void)?
+    let onExpand: () -> Void
     let onClose: () -> Void
 
     var body: some View {
@@ -254,14 +259,14 @@ private struct QuickPopupView: View {
                 .frame(width: 27, height: 27)
 
                 VStack(alignment: .leading, spacing: 1) {
-                    Text(result.speakText.isEmpty ? "Luma Translate" : result.speakText)
-                        .font(.system(size: 23, weight: .regular, design: .serif))
+                    Text(result.speakText.isEmpty || result.speakText.count > 65 ? "Luma · 阅读释义" : result.speakText)
+                        .font(.system(size: 23, weight: .semibold))
                         .lineLimit(2)
                     HStack(spacing: 5) {
                         if !result.phonetic.isEmpty { Text(result.phonetic) }
                         if !result.partOfSpeech.isEmpty { Text(result.partOfSpeech) }
                     }
-                    .font(.system(size: 10.5, weight: .medium, design: .monospaced))
+                    .font(.system(size: 13, weight: .regular))
                     .foregroundStyle(.secondary)
                 }
                 Spacer(minLength: 8)
@@ -272,12 +277,13 @@ private struct QuickPopupView: View {
                 .foregroundStyle(.secondary)
                 .accessibilityLabel("关闭")
             }
-            .padding(16)
+            .padding(22)
 
             Rectangle().fill(LumaPalette.violet.opacity(0.14)).frame(height: 1)
 
             ScrollView {
-                VStack(alignment: .leading, spacing: 15) {
+                VStack(alignment: .leading, spacing: 24) {
+                    if result.speakText.count > 65 { PopupSection(eyebrow: "英文原文", text: result.speakText) }
                     PopupSection(eyebrow: "简体中文", text: result.translation)
                     PopupSection(eyebrow: "Plain English", text: result.simpleEnglish)
                     PopupSection(eyebrow: "用法与搭配", text: result.practicalUsageZh, secondary: result.practicalUsageEn)
@@ -289,18 +295,23 @@ private struct QuickPopupView: View {
                     if !result.coverageNote.isEmpty { PopupSection(eyebrow: "来源与覆盖", text: result.coverageNote) }
                     if !result.meaningZh.isEmpty {
                         Text(result.meaningZh)
-                            .font(.system(size: 10.5))
+                            .font(.system(size: 12.5))
+                            .fixedSize(horizontal: false, vertical: true)
                             .foregroundStyle(.secondary)
                     }
                 }
-                .padding(16)
+                .padding(24)
                 .frame(maxWidth: .infinity, alignment: .leading)
             }
+            .scrollIndicators(.visible)
+            .frame(maxHeight: .infinity)
+            .background(.regularMaterial)
 
             Divider()
             HStack(spacing: 9) {
                 Button(action: onSpeak) { Label("朗读", systemImage: "speaker.wave.2") }
                 Button(action: onCopy) { Label("复制", systemImage: "doc.on.doc") }
+                Button(action: onExpand) { Label("展开阅读", systemImage: "arrow.up.left.and.arrow.down.right") }
                 Spacer()
                 if let onAI {
                     Button(action: onAI) {
@@ -312,10 +323,10 @@ private struct QuickPopupView: View {
                     .tint(LumaPalette.violet)
                 }
             }
-            .font(.system(size: 12, weight: .medium))
-            .padding(12)
+            .font(.system(size: 13, weight: .medium))
+            .padding(16)
         }
-        .frame(width: 410, height: 460)
+        .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
         .background(WindowGlass())
         .clipShape(RoundedRectangle(cornerRadius: 18, style: .continuous))
         .overlay(
@@ -361,11 +372,12 @@ final class QuickPopupController {
     private var speakAction: (() -> Void)?
     private var aiAction: (() -> Void)?
     private var isBusy = false
+    private var expandedReading = false
 
     init() {
         panel = LumaPanel(
-            contentRect: NSRect(x: 0, y: 0, width: 410, height: 460),
-            styleMask: [.borderless, .nonactivatingPanel],
+            contentRect: NSRect(x: 0, y: 0, width: 560, height: 640),
+            styleMask: [.borderless, .resizable, .nonactivatingPanel],
             backing: .buffered,
             defer: true
         )
@@ -375,6 +387,9 @@ final class QuickPopupController {
         panel.level = .floating
         panel.collectionBehavior = [.canJoinAllSpaces, .fullScreenAuxiliary]
         panel.isReleasedWhenClosed = false
+        panel.minSize = NSSize(width: 440, height: 360)
+        panel.isMovableByWindowBackground = true
+        panel.title = "Luma · 释义"
     }
 
     func showResult(
@@ -388,8 +403,9 @@ final class QuickPopupController {
         speakAction = onSpeak
         aiAction = onAI
         isBusy = false
+        expandedReading = false
         renderResult()
-        placeNearAnchor(size: CGSize(width: 410, height: 460))
+        placeNearAnchor(size: CGSize(width: 560, height: 640))
         panel.orderFrontRegardless()
     }
 
@@ -432,6 +448,11 @@ final class QuickPopupController {
             onSpeak: { [weak self] in self?.speakAction?() },
             onCopy: { NSPasteboard.general.clearContents(); NSPasteboard.general.setString(result.translation, forType: .string) },
             onAI: aiAction,
+            onExpand: { [weak self] in
+                guard let self else { return }
+                self.expandedReading.toggle()
+                self.placeNearAnchor(size: self.expandedReading ? CGSize(width: 780, height: 820) : CGSize(width: 560, height: 640))
+            },
             onClose: { [weak self] in self?.hide() }
         )
         panel.contentViewController = NSHostingController(rootView: view)
@@ -440,6 +461,7 @@ final class QuickPopupController {
     private func placeNearAnchor(size: CGSize) {
         let point = ScreenCoordinates.appKitPoint(fromQuartz: anchor)
         let visible = ScreenCoordinates.screen(containingQuartz: anchor)?.visibleFrame ?? NSScreen.main?.visibleFrame ?? .zero
+        let size = CGSize(width: min(size.width, max(280, visible.width - 24)), height: min(size.height, max(260, visible.height - 24)))
         var origin = CGPoint(x: point.x + 18, y: point.y - size.height - 18)
         if origin.x + size.width > visible.maxX { origin.x = point.x - size.width - 18 }
         if origin.y < visible.minY { origin.y = min(point.y + 18, visible.maxY - size.height) }
